@@ -1,0 +1,23 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import DocumentCard from "../components/DocumentCard.astro";
+
+const { title, description, heading, documents = [], site } = Astro.props;
+const navItems = [
+  { href: "/", label: "Overview" },
+  { href: "/search/", label: "Search" },
+  { href: "/collections/artifact-type/", label: "Collections" }
+];
+---
+
+<BaseLayout title={`${title} | ${site.title}`} description={description} site={site} navItems={navItems}>
+  <section class="page-intro">
+    <p class="site-kicker">Research index</p>
+    <h1>{heading}</h1>
+    <p>{description}</p>
+  </section>
+  <section class="card-grid">
+    {documents.map((document) => <DocumentCard document={document} />)}
+  </section>
+</BaseLayout>
+

@@ -1,0 +1,15 @@
+---
+const { document } = Astro.props;
+---
+
+<article class="document-card">
+  <p class="eyebrow">{document.artifactType} {document.id ? `· ${document.id}` : ""}</p>
+  <h3><a href={document.url}>{document.title}</a></h3>
+  {document.summary && <p>{document.summary}</p>}
+  <dl class="inline-meta">
+    <div><dt>Area</dt><dd>{document.researchArea}</dd></div>
+    <div><dt>Status</dt><dd>{document.status}</dd></div>
+    {document.updated && <div><dt>Updated</dt><dd>{document.updated}</dd></div>}
+  </dl>
+</article>
+

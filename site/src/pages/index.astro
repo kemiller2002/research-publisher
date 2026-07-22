@@ -1,0 +1,56 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import DocumentCard from "../components/DocumentCard.astro";
+import { catalog, collections, siteData } from "../utils/data";
+
+const navItems = [
+  { href: "/search/", label: "Search" },
+  { href: "/collections/artifact-type/", label: "Collections" }
+];
+const recentDocuments = [...catalog.records]
+  .sort((left, right) => right.updated.localeCompare(left.updated))
+  .slice(0, 6);
+---
+
+<BaseLayout title={siteData.site.title} description={siteData.site.description} site={siteData.site} navItems={navItems}>
+  <section class="hero">
+    <div>
+      <p class="site-kicker">Markdown in, static research web out</p>
+      <h1>{siteData.site.title}</h1>
+      <p class="lede">{siteData.site.description}</p>
+      <div class="hero-actions">
+        <a class="button" href="/search/">Search the corpus</a>
+        <a class="button button--secondary" href="/collections/artifact-type/">Browse collections</a>
+      </div>
+    </div>
+    <dl class="stats-panel">
+      <div><dt>Documents</dt><dd>{siteData.summary.totalDocuments}</dd></div>
+      <div><dt>Artifact Types</dt><dd>{Object.keys(collections.artifactTypes).length}</dd></div>
+      <div><dt>Research Areas</dt><dd>{Object.keys(collections.researchAreas).length}</dd></div>
+    </dl>
+  </section>
+
+  <section class="feature-grid">
+    <article>
+      <h2>Public Catalog</h2>
+      <p>Structured JSON stays stable for AI agents, dashboards, and graph tooling.</p>
+    </article>
+    <article>
+      <h2>Static Search</h2>
+      <p>Pagefind adds full-text retrieval after HTML generation without a hosted backend.</p>
+    </article>
+    <article>
+      <h2>Reusable Engine</h2>
+      <p>Content discovery, normalization, and rendering are driven by configuration instead of copy-pasted scaffolding.</p>
+    </article>
+  </section>
+
+  <section class="page-intro">
+    <p class="site-kicker">Recently updated</p>
+    <h2>Current research surface</h2>
+  </section>
+  <section class="card-grid">
+    {recentDocuments.map((document) => <DocumentCard document={document} />)}
+  </section>
+</BaseLayout>
+

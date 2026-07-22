@@ -1,0 +1,10 @@
+node_modules/
+site/node_modules/
+dist/
+.astro/
+.research-publisher/
+coverage/
+build-reports/
+fixtures/alt-research/dist/
+*.tgz
+.tmp/

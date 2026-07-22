@@ -1,0 +1,42 @@
+---
+import "../styles/index.css";
+
+const { title, description, site, navItems = [] } = Astro.props;
+---
+
+<!doctype html>
+<html lang={site.language ?? "en"}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <style is:inline set:html={Object.entries(site.branding?.cssVariables ?? {}).map(([key, value]) => `${key}:${value};`).join("") ? `:root{${Object.entries(site.branding?.cssVariables ?? {}).map(([key, value]) => `${key}:${value};`).join("")}}` : ""}></style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <div>
+          <p class="site-kicker">Reusable research publishing</p>
+          <a class="site-title" href="/">{site.title}</a>
+          <p class="site-description">{site.description}</p>
+        </div>
+        <nav aria-label="Primary">
+          <ul class="site-nav">
+            {navItems.map((item) => (
+              <li><a href={item.href}>{item.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>Built from Markdown with a reusable Astro and Pagefind workflow.</p>
+    </footer>
+  </body>
+</html>
+

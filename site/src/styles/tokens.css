@@ -1,0 +1,21 @@
+:root {
+  --color-bg: #f7f4ec;
+  --color-surface: #fffdf8;
+  --color-ink: #1d2630;
+  --color-accent: #9d3c12;
+  --color-accent-soft: #f6d6c7;
+  --color-border: #d7cfbf;
+  --color-muted: #5f6a75;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Source Sans 3", system-ui, sans-serif;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --radius: 1rem;
+  --shadow: 0 24px 60px rgba(12, 24, 32, 0.08);
+  --content-width: 72rem;
+}
+

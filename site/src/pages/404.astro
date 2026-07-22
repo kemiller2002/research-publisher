@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { siteData } from "../utils/data";
+---
+
+<BaseLayout title={`Not found | ${siteData.site.title}`} description="Page not found" site={siteData.site} navItems={[{ href: "/", label: "Overview" }]}>
+  <section class="page-intro">
+    <p class="site-kicker">404</p>
+    <h1>Page not found</h1>
+    <p>The requested research page does not exist in this build.</p>
+  </section>
+</BaseLayout>
+

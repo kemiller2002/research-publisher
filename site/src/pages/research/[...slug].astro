@@ -1,0 +1,25 @@
+---
+import ResearchDocumentLayout from "../../layouts/ResearchDocumentLayout.astro";
+import { catalog, graph, siteData } from "../../utils/data";
+
+export function getStaticPaths() {
+  return catalog.records.map((document) => ({
+    params: {
+      slug: document.url.replace(/^\/research\//, "").replace(/\/$/, "")
+    },
+    props: {
+      document
+    }
+  }));
+}
+
+const { document } = Astro.props;
+const lookup = new Map(catalog.records.filter((entry) => entry.id).map((entry) => [entry.id, entry]));
+const relatedIds = [...document.relatedDocuments, ...document.evidenceIds, ...document.hypothesisIds, ...document.theoryIds];
+const related = relatedIds.map((id) => lookup.get(id)).filter(Boolean);
+const backlinkIds = graph.backlinks[document.id ?? document.slug] ?? [];
+const backlinks = backlinkIds.map((id) => lookup.get(id)).filter(Boolean);
+---
+
+<ResearchDocumentLayout document={document} related={related} backlinks={backlinks} site={siteData.site} />
+

@@ -1,0 +1,37 @@
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(157, 60, 18, 0.08), transparent 30%),
+    linear-gradient(180deg, var(--color-bg), #fff);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+main,
+.site-header__inner,
+.site-footer {
+  width: min(calc(100% - 2rem), var(--content-width));
+  margin: 0 auto;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  background: var(--color-surface);
+  padding: var(--space-3);
+}
+

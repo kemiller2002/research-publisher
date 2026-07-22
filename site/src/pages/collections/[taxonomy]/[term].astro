@@ -1,0 +1,45 @@
+---
+import IndexLayout from "../../../layouts/IndexLayout.astro";
+import { collections, siteData } from "../../../utils/data";
+
+export function getStaticPaths() {
+  const collectionMap = {
+    "artifact-type": collections.artifactTypes,
+    "research-area": collections.researchAreas,
+    discipline: collections.disciplines,
+    tag: collections.tags,
+    status: collections.statuses
+  };
+
+  return Object.entries(collectionMap).flatMap(([taxonomy, values]) =>
+    Object.keys(values).map((term) => ({
+      params: {
+        taxonomy,
+        term: term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+      },
+      props: {
+        taxonomy,
+        term
+      }
+    }))
+  );
+}
+
+const { taxonomy, term } = Astro.props;
+const collectionMap = {
+  "artifact-type": collections.artifactTypes,
+  "research-area": collections.researchAreas,
+  discipline: collections.disciplines,
+  tag: collections.tags,
+  status: collections.statuses
+};
+const documents = collectionMap[taxonomy]?.[term] ?? [];
+---
+
+<IndexLayout
+  title={`${term} | ${taxonomy}`}
+  heading={term}
+  description={`Documents grouped under ${term}.`}
+  documents={documents}
+  site={siteData.site}
+/>

@@ -1,0 +1,55 @@
+---
+import IndexLayout from "../../../layouts/IndexLayout.astro";
+import { collections, siteData } from "../../../utils/data";
+
+const labels = {
+  "artifact-type": "Artifact Types",
+  "research-area": "Research Areas",
+  discipline: "Disciplines",
+  tag: "Tags",
+  status: "Statuses"
+};
+
+export function getStaticPaths() {
+  const collectionMap = {
+    "artifact-type": collections.artifactTypes,
+    "research-area": collections.researchAreas,
+    discipline: collections.disciplines,
+    tag: collections.tags,
+    status: collections.statuses
+  };
+
+  return Object.keys(collectionMap).map((taxonomy) => ({
+    params: { taxonomy }
+  }));
+}
+
+const taxonomy = Astro.params.taxonomy;
+const collectionMap = {
+  "artifact-type": collections.artifactTypes,
+  "research-area": collections.researchAreas,
+  discipline: collections.disciplines,
+  tag: collections.tags,
+  status: collections.statuses
+};
+const entries = collectionMap[taxonomy] ?? {};
+const documents = Object.keys(entries)
+  .sort((left, right) => left.localeCompare(right))
+  .map((key) => ({
+    title: key,
+    url: `/collections/${taxonomy}/${key.toLowerCase().replace(/[^a-z0-9]+/g, "-")}/`,
+    artifactType: labels[taxonomy] ?? "Collection",
+    researchArea: siteData.site.title,
+    status: `${entries[key].length} documents`,
+    summary: `Browse ${entries[key].length} documents in ${key}.`,
+    updated: entries[key][0]?.updated ?? ""
+  }));
+---
+
+<IndexLayout
+  title={labels[taxonomy] ?? "Collections"}
+  heading={labels[taxonomy] ?? "Collections"}
+  description="Browse grouped research records."
+  documents={documents}
+  site={siteData.site}
+/>

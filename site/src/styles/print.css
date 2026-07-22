@@ -1,0 +1,13 @@
+@media print {
+  .site-header,
+  .site-footer,
+  .search-shell,
+  .hero-actions {
+    display: none;
+  }
+
+  body {
+    background: white;
+  }
+}
+
