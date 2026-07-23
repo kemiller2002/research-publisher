@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import DocumentCard from "../components/DocumentCard.astro";
 import { catalog, collections, siteData } from "../utils/data";
+import { withBasePath } from "../utils/paths";
 
 const navItems = [
   { href: "/search/", label: "Search" },
@@ -19,8 +20,8 @@ const recentDocuments = [...catalog.records]
       <h1>{siteData.site.title}</h1>
       <p class="lede">{siteData.site.description}</p>
       <div class="hero-actions">
-        <a class="button" href="/search/">Search the corpus</a>
-        <a class="button button--secondary" href="/collections/artifact-type/">Browse collections</a>
+        <a class="button" href={withBasePath(siteData.site.baseUrl, "/search/")}>Search the corpus</a>
+        <a class="button button--secondary" href={withBasePath(siteData.site.baseUrl, "/collections/artifact-type/")}>Browse collections</a>
       </div>
     </div>
     <dl class="stats-panel">
@@ -50,7 +51,6 @@ const recentDocuments = [...catalog.records]
     <h2>Current research surface</h2>
   </section>
   <section class="card-grid">
-    {recentDocuments.map((document) => <DocumentCard document={document} />)}
+    {recentDocuments.map((document) => <DocumentCard document={document} baseUrl={siteData.site.baseUrl} />)}
   </section>
 </BaseLayout>
-

@@ -2,13 +2,13 @@ export default {
   site: {
     title: "Visual Engineering Research",
     description: "Searchable Visual Engineering research repository",
-    baseUrl: "/",
+    baseUrl: "/research-publisher/",
     language: "en",
-    siteUrl: "https://example.com"
+    siteUrl: "https://kemiller2002.github.io/research-publisher/"
   },
   repository: {
     name: "research-publisher",
-    sourceUrl: "https://github.com/example/research-publisher"
+    sourceUrl: "https://github.com/kemiller2002/research-publisher"
   },
   content: {
     include: [
@@ -71,4 +71,3 @@ export default {
     }
   }
 };
-

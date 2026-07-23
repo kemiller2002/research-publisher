@@ -42,13 +42,27 @@ const statuses = Object.keys(collections.statuses).sort((left, right) => left.lo
     <div id="search-results" class="search-results"></div>
   </section>
 
-  <script is:inline>
+  <script is:inline define:vars={{ baseUrl: siteData.site.baseUrl || "/" }}>
     const form = document.getElementById("search-form");
     const resultsRoot = document.getElementById("search-results");
     const statusLine = document.getElementById("search-status-line");
 
+    function withBasePath(targetPath) {
+      if (!targetPath || targetPath.startsWith("#")) {
+        return targetPath;
+      }
+      if (/^(?:[a-z]+:)?\/\//i.test(targetPath)) {
+        return targetPath;
+      }
+      const normalizedBase = !baseUrl || baseUrl === "/"
+        ? "/"
+        : (baseUrl.startsWith("/") ? baseUrl : `/${baseUrl}`).replace(/\/?$/, "/");
+      const trimmedTarget = targetPath.replace(/^\/+/, "");
+      return normalizedBase === "/" ? `/${trimmedTarget}` : `${normalizedBase}${trimmedTarget}`;
+    }
+
     async function runSearch(query, artifactType, status) {
-      const pagefind = await import("/pagefind/pagefind.js");
+      const pagefind = await import(withBasePath("/pagefind/pagefind.js"));
       const search = await pagefind.search(query || "");
       const data = await Promise.all(search.results.map((result) => result.data()));
       return data.filter((item) => {
@@ -71,7 +85,7 @@ const statuses = Object.keys(collections.statuses).sort((left, right) => left.lo
       resultsRoot.innerHTML = items.map((item) => `
         <article class="document-card">
           <p class="eyebrow">${item.meta.artifactType || ""} ${item.meta.stableId ? `· ${item.meta.stableId}` : ""}</p>
-          <h2><a href="${item.url}">${item.meta.title || item.url}</a></h2>
+          <h2><a href="${withBasePath(item.url)}">${item.meta.title || item.url}</a></h2>
           <p>${item.excerpt || item.meta.summary || ""}</p>
           <dl class="inline-meta">
             <div><dt>Area</dt><dd>${item.meta.researchArea || ""}</dd></div>
@@ -93,4 +107,3 @@ const statuses = Object.keys(collections.statuses).sort((left, right) => left.lo
     });
   </script>
 </BaseLayout>
-

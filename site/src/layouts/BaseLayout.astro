@@ -1,7 +1,9 @@
 ---
 import "../styles/index.css";
+import { withBasePath } from "../utils/paths";
 
 const { title, description, site, navItems = [] } = Astro.props;
+const homeHref = withBasePath(site.baseUrl, "/");
 ---
 
 <!doctype html>
@@ -19,13 +21,13 @@ const { title, description, site, navItems = [] } = Astro.props;
       <div class="site-header__inner">
         <div>
           <p class="site-kicker">Reusable research publishing</p>
-          <a class="site-title" href="/">{site.title}</a>
+          <a class="site-title" href={homeHref}>{site.title}</a>
           <p class="site-description">{site.description}</p>
         </div>
         <nav aria-label="Primary">
           <ul class="site-nav">
             {navItems.map((item) => (
-              <li><a href={item.href}>{item.label}</a></li>
+              <li><a href={withBasePath(site.baseUrl, item.href)}>{item.label}</a></li>
             ))}
           </ul>
         </nav>
@@ -39,4 +41,3 @@ const { title, description, site, navItems = [] } = Astro.props;
     </footer>
   </body>
 </html>
-

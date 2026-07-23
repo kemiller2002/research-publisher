@@ -17,7 +17,6 @@ const navItems = [
     <p>{description}</p>
   </section>
   <section class="card-grid">
-    {documents.map((document) => <DocumentCard document={document} />)}
+    {documents.map((document) => <DocumentCard document={document} baseUrl={site.baseUrl} />)}
   </section>
 </BaseLayout>
-

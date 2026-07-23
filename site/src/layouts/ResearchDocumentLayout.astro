@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
+import { withBasePath } from "../utils/paths";
 
 const { document, backlinks = [], related = [], site } = Astro.props;
 const pageTitle = `${document.title} | ${site.title}`;
@@ -53,7 +54,7 @@ const navItems = [
           <section>
             <h2>Related Documents</h2>
             <ul>
-              {related.map((item) => <li><a href={item.url}>{item.title}</a></li>)}
+              {related.map((item) => <li><a href={withBasePath(site.baseUrl, item.url)}>{item.title}</a></li>)}
             </ul>
           </section>
         )}
@@ -61,7 +62,7 @@ const navItems = [
           <section>
             <h2>Backlinks</h2>
             <ul>
-              {backlinks.map((item) => <li><a href={item.url}>{item.title}</a></li>)}
+              {backlinks.map((item) => <li><a href={withBasePath(site.baseUrl, item.url)}>{item.title}</a></li>)}
             </ul>
           </section>
         )}
@@ -69,4 +70,3 @@ const navItems = [
     )}
   </article>
 </BaseLayout>
-
