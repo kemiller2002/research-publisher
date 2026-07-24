@@ -10,6 +10,34 @@ import { validateDocuments } from "../validation/validate.mjs";
 import { buildRelationshipGraph } from "../relationships/graph.mjs";
 import { ensureDirectory, writeJson } from "./filesystem.mjs";
 
+function normalizeBaseUrl(baseUrl) {
+  if (!baseUrl || baseUrl === "/") {
+    return "/";
+  }
+
+  const withLeadingSlash = baseUrl.startsWith("/") ? baseUrl : `/${baseUrl}`;
+  return withLeadingSlash.endsWith("/") ? withLeadingSlash : `${withLeadingSlash}/`;
+}
+
+function withBasePath(baseUrl, targetPath) {
+  if (!targetPath || targetPath.startsWith("#")) {
+    return targetPath;
+  }
+
+  if (/^(?:[a-z]+:)?\/\//i.test(targetPath)) {
+    return targetPath;
+  }
+
+  const normalizedBase = normalizeBaseUrl(baseUrl);
+  const trimmedTarget = targetPath.replace(/^\/+/, "");
+
+  if (normalizedBase === "/") {
+    return `/${trimmedTarget}`;
+  }
+
+  return `${normalizedBase}${trimmedTarget}`;
+}
+
 function summarizeDocuments(documents) {
   const byArtifactType = {};
   const byResearchArea = {};
@@ -139,6 +167,45 @@ function createCollections(documents) {
   };
 }
 
+function createPublicCatalog(documents, config) {
+  return {
+    schemaVersion: "1.0",
+    generatedOn: "2026-07-22",
+    project: config.site.title,
+    records: documents.map((document) => ({
+      ...document,
+      url: withBasePath(config.site.baseUrl, document.url)
+    }))
+  };
+}
+
+function createPublicGraph(graph, config) {
+  return {
+    ...graph,
+    nodes: graph.nodes.map((node) => ({
+      ...node,
+      url: withBasePath(config.site.baseUrl, node.url)
+    }))
+  };
+}
+
+function createPublicCollections(collections, config) {
+  return Object.fromEntries(
+    Object.entries(collections).map(([collectionName, terms]) => [
+      collectionName,
+      Object.fromEntries(
+        Object.entries(terms).map(([term, documents]) => [
+          term,
+          documents.map((document) => ({
+            ...document,
+            url: withBasePath(config.site.baseUrl, document.url)
+          }))
+        ])
+      )
+    ])
+  );
+}
+
 export async function buildProject({ engineRoot, projectRoot, config, mode = "build" }) {
   const startedAt = performance.now();
   await inventoryProject({ projectRoot, config });
@@ -159,15 +226,18 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   const internalDirectory = path.join(projectRoot, ".research-publisher", path.basename(config.output.directory) || "dist");
   const dataDirectory = path.join(internalDirectory, "data");
   await ensureDirectory(dataDirectory);
-  const catalog = {
+  const internalCatalog = {
     schemaVersion: "1.0",
     generatedOn: "2026-07-22",
     project: config.site.title,
     records: normalized
   };
+  const catalog = createPublicCatalog(normalized, config);
+  const publicGraph = createPublicGraph(graph, config);
   const collections = createCollections(normalized);
+  const publicCollections = createPublicCollections(collections, config);
 
-  await writeJson(path.join(dataDirectory, "catalog.json"), catalog);
+  await writeJson(path.join(dataDirectory, "catalog.json"), internalCatalog);
   await writeJson(path.join(dataDirectory, "graph.json"), graph);
   await writeJson(path.join(dataDirectory, "collections.json"), collections);
   await writeJson(path.join(dataDirectory, "site.json"), {
@@ -198,7 +268,7 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
 
   await ensureDirectory(path.join(outputDirectory, "data"));
   await writeJson(path.join(outputDirectory, config.output.catalog), catalog);
-  await writeJson(path.join(outputDirectory, "data/research-graph.json"), graph);
+  await writeJson(path.join(outputDirectory, "data/research-graph.json"), publicGraph);
   await writeJson(path.join(outputDirectory, "data/build-diagnostics.json"), {
     schemaVersion: "1.0",
     generatedOn: "2026-07-22",
@@ -210,12 +280,12 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
     summary: summarizeDocuments(normalized),
     diagnostics
   });
-  await writeJson(path.join(outputDirectory, "data/research-collections.json"), collections);
+  await writeJson(path.join(outputDirectory, "data/research-collections.json"), publicCollections);
 
   const pagefindStarted = performance.now();
   await runPagefind({ engineRoot, outputDirectory });
   const pagefindTimeMs = performance.now() - pagefindStarted;
-  const verificationDiagnostics = await verifyOutput({ outputDirectory, catalog });
+  const verificationDiagnostics = await verifyOutput({ outputDirectory, catalog: internalCatalog });
   const finalDiagnostics = diagnostics.concat(verificationDiagnostics);
   const buildDiagnostics = {
     schemaVersion: "1.0",
@@ -239,7 +309,7 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
 
   return {
     catalog,
-    graph,
+    graph: publicGraph,
     diagnostics: finalDiagnostics
   };
 }

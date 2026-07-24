@@ -17,6 +17,10 @@ describe("integration build", () => {
     const result = await buildProject({ engineRoot, projectRoot, config });
     expect(result.catalog.records.length).toBeGreaterThan(3);
     await expect(fs.access(path.join(workspaceRoot, "dist/data/research-catalog.json"))).resolves.toBeUndefined();
+    expect(result.catalog.records[0].url.startsWith(config.site.baseUrl)).toBe(true);
+    await expect(
+      fs.access(path.join(workspaceRoot, "dist/research/adding-a-research-repository/index.html"))
+    ).resolves.toBeUndefined();
   }, 120000);
 
   it("builds the second fixture project with the same package", async () => {
