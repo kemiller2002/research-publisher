@@ -61,6 +61,10 @@
   padding: var(--space-8) 0;
 }
 
+.site-build-stamp {
+  opacity: 0.8;
+}
+
 @media (min-width: 48rem) {
   .site-header__inner,
   .hero {
@@ -74,4 +78,3 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-

@@ -4,6 +4,16 @@ import { withBasePath } from "../utils/paths";
 
 const { title, description, site, navItems = [] } = Astro.props;
 const homeHref = withBasePath(site.baseUrl, "/");
+const buildGeneratedAt = site.buildGeneratedAt ?? null;
+const buildGeneratedAtDate = buildGeneratedAt ? new Date(buildGeneratedAt) : null;
+const buildGeneratedAtLabel =
+  buildGeneratedAtDate && !Number.isNaN(buildGeneratedAtDate.getTime())
+    ? `${new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "medium",
+        timeZone: "UTC"
+      }).format(buildGeneratedAtDate)} UTC`
+    : buildGeneratedAt;
 ---
 
 <!doctype html>
@@ -38,6 +48,11 @@ const homeHref = withBasePath(site.baseUrl, "/");
     </main>
     <footer class="site-footer">
       <p>Built from Markdown with a reusable Astro and Pagefind workflow.</p>
+      {buildGeneratedAtLabel ? (
+        <p class="site-build-stamp">
+          Build: <time datetime={buildGeneratedAt}>{buildGeneratedAtLabel}</time>
+        </p>
+      ) : null}
     </footer>
   </body>
 </html>

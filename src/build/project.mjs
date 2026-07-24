@@ -208,6 +208,7 @@ function createPublicCollections(collections, config) {
 
 export async function buildProject({ engineRoot, projectRoot, config, mode = "build" }) {
   const startedAt = performance.now();
+  const buildGeneratedAt = new Date().toISOString();
   await inventoryProject({ projectRoot, config });
   const discovered = await discoverFiles({
     projectRoot,
@@ -243,7 +244,8 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   await writeJson(path.join(dataDirectory, "site.json"), {
     site: {
       ...config.site,
-      branding: config.branding
+      branding: config.branding,
+      buildGeneratedAt
     },
     repository: config.repository,
     features: config.features,

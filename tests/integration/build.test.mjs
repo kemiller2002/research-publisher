@@ -18,6 +18,9 @@ describe("integration build", () => {
     expect(result.catalog.records.length).toBeGreaterThan(3);
     await expect(fs.access(path.join(workspaceRoot, "dist/data/research-catalog.json"))).resolves.toBeUndefined();
     expect(result.catalog.records[0].url.startsWith(config.site.baseUrl)).toBe(true);
+    const indexHtml = await fs.readFile(path.join(workspaceRoot, "dist/index.html"), "utf8");
+    expect(indexHtml).toContain("Build:");
+    expect(indexHtml).toMatch(/Build:\s*<time datetime="[^"]+">/);
     await expect(
       fs.access(path.join(workspaceRoot, "dist/research/adding-a-research-repository/index.html"))
     ).resolves.toBeUndefined();
