@@ -15,40 +15,53 @@ const recentDocuments = [...catalog.records]
 
 <BaseLayout title={siteData.site.title} description={siteData.site.description} site={siteData.site} navItems={navItems}>
   <section class="hero">
-    <div>
-      <p class="site-kicker">Markdown in, static research web out</p>
-      <h1>{siteData.site.title}</h1>
-      <p class="lede">{siteData.site.description}</p>
+    <div class="hero__copy">
+      <p class="site-kicker">Visual Engineering research archive</p>
+      <h1>Find the thinking<br />behind the work.</h1>
+      <p class="lede">Explore a living corpus of evidence, experiments, concepts, and working theories about how visual systems help people understand and act.</p>
       <div class="hero-actions">
-        <a class="button" href={withBasePath(siteData.site.baseUrl, "/search/")}>Search the corpus</a>
-        <a class="button button--secondary" href={withBasePath(siteData.site.baseUrl, "/collections/artifact-type/")}>Browse collections</a>
+        <a class="button" href={withBasePath(siteData.site.baseUrl, "/search/")}>Search all research <span aria-hidden="true">→</span></a>
+        <a class="text-link" href={withBasePath(siteData.site.baseUrl, "/collections/artifact-type/")}>Browse by collection</a>
       </div>
     </div>
     <dl class="stats-panel">
-      <div><dt>Documents</dt><dd>{siteData.summary.totalDocuments}</dd></div>
-      <div><dt>Artifact Types</dt><dd>{Object.keys(collections.artifactTypes).length}</dd></div>
-      <div><dt>Research Areas</dt><dd>{Object.keys(collections.researchAreas).length}</dd></div>
+      <div><dd>{siteData.summary.totalDocuments}</dd><dt>Documents indexed</dt></div>
+      <div><dd>{Object.keys(collections.artifactTypes).length}</dd><dt>Artifact types</dt></div>
+      <div><dd>{Object.keys(collections.researchAreas).length}</dd><dt>Research areas</dt></div>
     </dl>
   </section>
 
-  <section class="feature-grid">
+  <section class="feature-grid" aria-labelledby="explore-heading">
+    <div class="section-heading">
+      <p class="site-kicker">Explore the corpus</p>
+      <h2 id="explore-heading">Follow the shape of the research</h2>
+    </div>
     <article>
-      <h2>Public Catalog</h2>
-      <p>Structured JSON stays stable for AI agents, dashboards, and graph tooling.</p>
+      <p class="feature-number" aria-hidden="true">01</p>
+      <h3>By artifact</h3>
+      <p>Move from raw evidence and research notes to hypotheses and durable theory.</p>
+      <a href={withBasePath(siteData.site.baseUrl, "/collections/artifact-type/")}>View artifact types <span aria-hidden="true">→</span></a>
     </article>
     <article>
-      <h2>Static Search</h2>
-      <p>Pagefind adds full-text retrieval after HTML generation without a hosted backend.</p>
+      <p class="feature-number" aria-hidden="true">02</p>
+      <h3>By area</h3>
+      <p>Trace related work across composition, publishing, evidence, and human factors.</p>
+      <a href={withBasePath(siteData.site.baseUrl, "/collections/research-area/")}>View research areas <span aria-hidden="true">→</span></a>
     </article>
     <article>
-      <h2>Reusable Engine</h2>
-      <p>Content discovery, normalization, and rendering are driven by configuration instead of copy-pasted scaffolding.</p>
+      <p class="feature-number" aria-hidden="true">03</p>
+      <h3>By status</h3>
+      <p>Separate early drafts and active investigations from completed findings.</p>
+      <a href={withBasePath(siteData.site.baseUrl, "/collections/status/")}>View research status <span aria-hidden="true">→</span></a>
     </article>
   </section>
 
-  <section class="page-intro">
+  <section class="page-intro page-intro--split">
+    <div>
     <p class="site-kicker">Recently updated</p>
-    <h2>Current research surface</h2>
+      <h2>Latest from the archive</h2>
+    </div>
+    <a class="text-link" href={withBasePath(siteData.site.baseUrl, "/search/")}>Search the full index</a>
   </section>
   <section class="card-grid">
     {recentDocuments.map((document) => <DocumentCard document={document} baseUrl={siteData.site.baseUrl} />)}

@@ -4,10 +4,11 @@ h3,
 .site-title {
   font-family: var(--font-display);
   line-height: 1.1;
+  letter-spacing: -0.025em;
 }
 
 h1 {
-  font-size: clamp(2.4rem, 6vw, 4.5rem);
+  font-size: clamp(2.6rem, 7vw, 5.6rem);
 }
 
 h2 {
@@ -19,8 +20,10 @@ h3 {
 }
 
 .lede {
-  font-size: 1.1rem;
+  max-width: 60ch;
+  font-size: clamp(1.08rem, 2vw, 1.28rem);
   color: var(--color-muted);
+  line-height: 1.55;
 }
 
 .eyebrow,
@@ -29,5 +32,5 @@ h3 {
   text-transform: uppercase;
   font-size: 0.8rem;
   color: var(--color-muted);
+  font-weight: 700;
 }
-

@@ -35,18 +35,19 @@ const navItems = [
       </dl>
     </header>
 
-    {document.headings?.length > 1 && (
-      <aside class="toc-panel">
-        <h2>Contents</h2>
-        <ol>
-          {document.headings.filter((heading) => heading.depth <= 3).map((heading) => (
-            <li><a href={`#${heading.text.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{heading.text}</a></li>
-          ))}
-        </ol>
-      </aside>
-    )}
-
-    <section class="document-body" set:html={document.html} />
+    <div class="document-reading-grid">
+      {document.headings?.length > 1 && (
+        <aside class="toc-panel">
+          <h2>On this page</h2>
+          <ol>
+            {document.headings.filter((heading) => heading.depth <= 3).map((heading) => (
+              <li><a href={`#${heading.text.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{heading.text}</a></li>
+            ))}
+          </ol>
+        </aside>
+      )}
+      <section class="document-body" set:html={document.html} />
+    </div>
 
     {(related.length > 0 || backlinks.length > 0) && (
       <section class="relationship-grid">

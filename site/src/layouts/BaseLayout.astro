@@ -14,6 +14,14 @@ const buildGeneratedAtLabel =
         timeZone: "UTC"
       }).format(buildGeneratedAtDate)} UTC`
     : buildGeneratedAt;
+const currentPath = Astro.url.pathname;
+const basePath = site.baseUrl === "/" ? "" : site.baseUrl.replace(/\/$/, "");
+const currentRoute = basePath && currentPath.startsWith(basePath)
+  ? currentPath.slice(basePath.length) || "/"
+  : currentPath;
+const isCurrent = (href) => {
+  return href === "/" ? currentRoute === "/" : currentRoute.startsWith(href);
+};
 ---
 
 <!doctype html>
@@ -29,15 +37,17 @@ const buildGeneratedAtLabel =
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="site-header__inner">
-        <div>
-          <p class="site-kicker">Reusable research publishing</p>
+        <div class="site-identity">
+          <span class="site-mark" aria-hidden="true">VE</span>
+          <div>
           <a class="site-title" href={homeHref}>{site.title}</a>
-          <p class="site-description">{site.description}</p>
+            <p class="site-description">An open index of evidence, theory, and practice</p>
+          </div>
         </div>
         <nav aria-label="Primary">
           <ul class="site-nav">
             {navItems.map((item) => (
-              <li><a href={withBasePath(site.baseUrl, item.href)}>{item.label}</a></li>
+              <li><a href={withBasePath(site.baseUrl, item.href)} aria-current={isCurrent(item.href) ? "page" : undefined}>{item.label}</a></li>
             ))}
           </ul>
         </nav>
@@ -47,7 +57,8 @@ const buildGeneratedAtLabel =
       <slot />
     </main>
     <footer class="site-footer">
-      <p>Built from Markdown with a reusable Astro and Pagefind workflow.</p>
+      <p><strong>{site.title}</strong></p>
+      <p>Research made navigable, verifiable, and reusable.</p>
       {buildGeneratedAtLabel ? (
         <p class="site-build-stamp">
           Build: <time datetime={buildGeneratedAt}>{buildGeneratedAtLabel}</time>

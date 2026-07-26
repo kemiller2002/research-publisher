@@ -1,11 +1,10 @@
 html {
-  color-scheme: light dark;
+  color-scheme: light;
+  scroll-behavior: smooth;
 }
 
 body {
-  background:
-    radial-gradient(circle at top, rgba(157, 60, 18, 0.08), transparent 30%),
-    linear-gradient(180deg, var(--color-bg), #fff);
+  background: var(--color-bg);
   color: var(--color-ink);
   font-family: var(--font-body);
   line-height: 1.6;
@@ -13,6 +12,8 @@ body {
 
 a {
   color: var(--color-accent);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 0.08em;
 }
 
 main,
@@ -35,3 +36,13 @@ main,
   padding: var(--space-3);
 }
 
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
