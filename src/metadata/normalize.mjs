@@ -20,8 +20,31 @@ const legacyAliases = {
   artifact_type: "artifactType",
   updated_at: "updated",
   created_at: "created",
-  author: "authorAgent"
+  author: "authorAgent",
+  documentPurpose: "purposes",
+  purpose: "purposes",
+  audience: "audiences",
+  projectId: "project"
 };
+
+export const documentPurposeVocabulary = [
+  "orient",
+  "decide",
+  "apply",
+  "verify",
+  "reproduce",
+  "reference",
+  "integrate",
+  "chronicle"
+];
+
+export const audienceVocabulary = [
+  "general",
+  "executive",
+  "practitioner",
+  "researcher",
+  "contributor"
+];
 
 function normalizeArray(value) {
   if (value == null || value === "") {
@@ -123,6 +146,18 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function toBoolean(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (value == null || value === "") {
+    return false;
+  }
+
+  return ["true", "yes", "1"].includes(String(value).trim().toLowerCase());
+}
+
 function slugify(value) {
   return value
     .toLowerCase()
@@ -145,12 +180,18 @@ export function normalizeDocument(parsed) {
   const contentHash = crypto.createHash("sha256").update(parsed.body).digest("hex");
 
   return {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     id,
     title,
     slug,
     url,
     artifactType,
+    project: frontmatter.project ? String(frontmatter.project).trim() : null,
+    purposes: normalizeArray(frontmatter.purposes).map((value) => value.toLowerCase()),
+    audiences: normalizeArray(frontmatter.audiences).map((value) => value.toLowerCase()),
+    entryPoint: toBoolean(frontmatter.entryPoint),
+    entryPointOrder: toNumber(frontmatter.entryPointOrder),
+    entryPointLabel: frontmatter.entryPointLabel ? String(frontmatter.entryPointLabel).trim() : null,
     researchArea: frontmatter.researchArea ? String(frontmatter.researchArea) : "General Research",
     discipline: normalizeArray(frontmatter.discipline),
     summary: frontmatter.summary ? String(frontmatter.summary).trim() : parsed.excerpt || "",
@@ -179,4 +220,3 @@ export function normalizeDocument(parsed) {
     compatibilityMode: Object.keys(parsed.frontmatter ?? {}).length === 0
   };
 }
-

@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import DocumentCard from "../components/DocumentCard.astro";
-import { catalog, collections, siteData } from "../utils/data";
+import { catalog, collections, guides, siteData } from "../utils/data";
 import { withBasePath } from "../utils/paths";
 
 const navItems = [
@@ -11,6 +11,8 @@ const navItems = [
 const recentDocuments = [...catalog.records]
   .sort((left, right) => right.updated.localeCompare(left.updated))
   .slice(0, 6);
+const entryDocuments = Object.values(guides).flat().slice(0, 6);
+const featuredDocuments = entryDocuments.length > 0 ? entryDocuments : recentDocuments;
 ---
 
 <BaseLayout title={siteData.site.title} description={siteData.site.description} site={siteData.site} navItems={navItems}>
@@ -51,19 +53,19 @@ const recentDocuments = [...catalog.records]
     <article>
       <p class="feature-number" aria-hidden="true">03</p>
       <h3>By status</h3>
-      <p>Separate early drafts and active investigations from completed findings.</p>
-      <a href={withBasePath(siteData.site.baseUrl, "/collections/status/")}>View research status <span aria-hidden="true">→</span></a>
+      <p>Choose a path for orientation, decisions, application, verification, or deeper research.</p>
+      <a href={withBasePath(siteData.site.baseUrl, "/collections/purpose/")}>View reader purposes <span aria-hidden="true">→</span></a>
     </article>
   </section>
 
   <section class="page-intro page-intro--split">
     <div>
-    <p class="site-kicker">Recently updated</p>
-      <h2>Latest from the archive</h2>
+    <p class="site-kicker">{entryDocuments.length > 0 ? "Start here" : "Recently updated"}</p>
+      <h2>{entryDocuments.length > 0 ? "Guides to the research" : "Latest from the archive"}</h2>
     </div>
     <a class="text-link" href={withBasePath(siteData.site.baseUrl, "/search/")}>Search the full index</a>
   </section>
   <section class="card-grid">
-    {recentDocuments.map((document) => <DocumentCard document={document} baseUrl={siteData.site.baseUrl} />)}
+    {featuredDocuments.map((document) => <DocumentCard document={document} baseUrl={siteData.site.baseUrl} />)}
   </section>
 </BaseLayout>

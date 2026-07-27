@@ -8,6 +8,7 @@ const navItems = [
 ];
 const artifactTypes = Object.keys(collections.artifactTypes).sort((left, right) => left.localeCompare(right));
 const statuses = Object.keys(collections.statuses).sort((left, right) => left.localeCompare(right));
+const purposes = Object.keys(collections.purposes).sort((left, right) => left.localeCompare(right));
 ---
 
 <BaseLayout title={`Search | ${siteData.site.title}`} description="Full-text research search" site={siteData.site} navItems={navItems}>
@@ -36,6 +37,13 @@ const statuses = Object.keys(collections.statuses).sort((left, right) => left.lo
           {statuses.map((value) => <option value={value}>{value}</option>)}
         </select>
       </label>
+      <label>
+        <span>Reader purpose</span>
+        <select id="search-purpose">
+          <option value="">All</option>
+          {purposes.map((value) => <option value={value}>{value}</option>)}
+        </select>
+      </label>
       <button class="button" type="submit">Search</button>
     </form>
     <p id="search-status-line" aria-live="polite"></p>
@@ -61,7 +69,7 @@ const statuses = Object.keys(collections.statuses).sort((left, right) => left.lo
       return normalizedBase === "/" ? `/${trimmedTarget}` : `${normalizedBase}${trimmedTarget}`;
     }
 
-    async function runSearch(query, artifactType, status) {
+    async function runSearch(query, artifactType, status, purpose) {
       const pagefind = await import(withBasePath("/pagefind/pagefind.js"));
       const search = await pagefind.search(query || "");
       const data = await Promise.all(search.results.map((result) => result.data()));
@@ -70,6 +78,9 @@ const statuses = Object.keys(collections.statuses).sort((left, right) => left.lo
           return false;
         }
         if (status && item.meta.status !== status) {
+          return false;
+        }
+        if (purpose && !String(item.meta.purposes || "").split(",").map((value) => value.trim()).includes(purpose)) {
           return false;
         }
         return true;
@@ -100,8 +111,9 @@ const statuses = Object.keys(collections.statuses).sort((left, right) => left.lo
       const query = document.getElementById("search-query").value;
       const artifactType = document.getElementById("search-artifactType").value;
       const status = document.getElementById("search-status").value;
+      const purpose = document.getElementById("search-purpose").value;
       statusLine.textContent = "Searching…";
-      const items = await runSearch(query, artifactType, status);
+      const items = await runSearch(query, artifactType, status, purpose);
       statusLine.textContent = `${items.length} result${items.length === 1 ? "" : "s"}`;
       renderResults(items);
     });

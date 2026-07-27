@@ -7,7 +7,10 @@ const labels = {
   "research-area": "Research Areas",
   discipline: "Disciplines",
   tag: "Tags",
-  status: "Statuses"
+  status: "Statuses",
+  project: "Projects",
+  purpose: "Reader Purposes",
+  audience: "Audiences"
 };
 
 export function getStaticPaths() {
@@ -16,7 +19,10 @@ export function getStaticPaths() {
     "research-area": collections.researchAreas,
     discipline: collections.disciplines,
     tag: collections.tags,
-    status: collections.statuses
+    status: collections.statuses,
+    project: collections.projects,
+    purpose: collections.purposes,
+    audience: collections.audiences
   };
 
   return Object.keys(collectionMap).map((taxonomy) => ({
@@ -30,7 +36,10 @@ const collectionMap = {
   "research-area": collections.researchAreas,
   discipline: collections.disciplines,
   tag: collections.tags,
-  status: collections.statuses
+  status: collections.statuses,
+  project: collections.projects,
+  purpose: collections.purposes,
+  audience: collections.audiences
 };
 const entries = collectionMap[taxonomy] ?? {};
 const documents = Object.keys(entries)

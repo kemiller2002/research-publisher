@@ -17,6 +17,19 @@ describe("integration build", () => {
     const result = await buildProject({ engineRoot, projectRoot, config });
     expect(result.catalog.records.length).toBeGreaterThan(3);
     await expect(fs.access(path.join(workspaceRoot, "dist/data/research-catalog.json"))).resolves.toBeUndefined();
+    const guides = JSON.parse(await fs.readFile(path.join(workspaceRoot, "dist/data/research-guides.json"), "utf8"));
+    expect(guides.schemaVersion).toBe("1.0");
+    expect(guides.projects["research-publisher"][0]).toMatchObject({
+      id: "RP-2026-001",
+      entryPointLabel: "Start here",
+      purposes: ["orient", "integrate", "decide"]
+    });
+    const projectHtml = await fs.readFile(
+      path.join(workspaceRoot, "dist/collections/project/research-publisher/index.html"),
+      "utf8"
+    );
+    expect(projectHtml).toContain("guided starting point");
+    expect(projectHtml).toContain("Start here");
     expect(result.catalog.records[0].url.startsWith(config.site.baseUrl)).toBe(true);
     const indexHtml = await fs.readFile(path.join(workspaceRoot, "dist/index.html"), "utf8");
     expect(indexHtml).toContain("Build:");
@@ -31,5 +44,9 @@ describe("integration build", () => {
     const result = await buildProject({ engineRoot, projectRoot, config });
     expect(result.catalog.records.length).toBe(3);
     await expect(fs.access(path.join(workspaceRoot, "fixtures/alt-research/dist/data/research-catalog.json"))).resolves.toBeUndefined();
+    const guides = JSON.parse(
+      await fs.readFile(path.join(workspaceRoot, "fixtures/alt-research/dist/data/research-guides.json"), "utf8")
+    );
+    expect(guides.projects["civic-dashboard"]).toHaveLength(1);
   }, 120000);
 });

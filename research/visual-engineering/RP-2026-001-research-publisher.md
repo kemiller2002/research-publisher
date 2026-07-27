@@ -2,6 +2,19 @@
 id: RP-2026-001
 title: Reusable Research Publishing System
 artifactType: research-package
+project: research-publisher
+purposes:
+  - orient
+  - integrate
+  - decide
+audiences:
+  - executive
+  - practitioner
+  - researcher
+  - contributor
+entryPoint: true
+entryPointOrder: 10
+entryPointLabel: Start here
 researchArea: Visual Engineering
 discipline:
   - Information Architecture
@@ -54,4 +67,3 @@ The system should separate content normalization, relationship modeling, and pag
 
 - How strict should CI become once more repositories adopt the schema?
 - Which additional artifact types need first-class layouts?
-

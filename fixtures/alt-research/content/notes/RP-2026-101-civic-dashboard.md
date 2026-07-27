@@ -2,6 +2,16 @@
 id: RP-2026-101
 title: Civic Dashboard Research Package
 artifactType: research-package
+project: civic-dashboard
+purposes:
+  - orient
+  - integrate
+audiences:
+  - practitioner
+  - researcher
+entryPoint: true
+entryPointOrder: 10
+entryPointLabel: Start here
 researchArea: Civic Systems
 discipline:
   - Data Communication
@@ -24,4 +34,3 @@ relatedDocuments:
 ## Summary
 
 The fixture project uses the same engine with different content folders and visual tokens.
-

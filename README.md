@@ -20,6 +20,7 @@ This repo also contains a demo research corpus and GitHub Pages site at the root
 - Discover Markdown content through config globs
 - Normalize and validate research metadata
 - Generate a public catalog and relationship graph
+- Generate project guides from explicit entry-point metadata
 - Render a static Astro site
 - Generate a Pagefind full-text search index
 
@@ -29,6 +30,7 @@ This repo also contains a demo research corpus and GitHub Pages site at the root
 - `research-publisher validate --config ./research-publisher.config.mjs`
 - `research-publisher build --config ./research-publisher.config.mjs`
 - `research-publisher build --config ./fixtures/alt-research/research-publisher.config.mjs`
+- `research-publisher install-prompt --config ./research-publisher.config.mjs`
 - `npm run smoke:consumer`
 
 ## Local Testing
@@ -58,3 +60,13 @@ Then add scripts like:
 ```
 
 The engine resolves Astro and Pagefind from the installed package, while content discovery, diagnostics, and generated search files stay in the consuming repository.
+
+## Organizing Different Kinds Of Reading
+
+Research Publisher keeps document type, project ownership, reader purpose, audience, and front-page placement separate. This prevents free-form tags from becoming an unstable navigation system.
+
+See [Document Purpose And Project Guide Architecture](./docs/document-purpose-taxonomy.md). Install the reusable corpus-classification prompt in a consumer repository with:
+
+```bash
+npx research-publisher install-prompt --config ./research-publisher.config.mjs
+```

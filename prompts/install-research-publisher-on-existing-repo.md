@@ -170,6 +170,7 @@ Complete all of the following:
 7. Run inventory, validation, and build commands.
 8. Fix practical configuration errors you discover.
 9. Summarize the discovered content strategy and any remaining issues.
+10. Run `research-publisher install-prompt --config ./research-publisher.config.mjs` so the repository receives the reusable document-marking prompt without copying package internals manually.
 
 ---
 

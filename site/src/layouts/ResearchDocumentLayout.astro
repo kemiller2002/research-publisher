@@ -23,6 +23,9 @@ const navItems = [
       <dl class="metadata-panel">
         {document.id && <div><dt>Identifier</dt><dd>{document.id}</dd></div>}
         <div><dt>Research Area</dt><dd data-pagefind-meta="researchArea">{document.researchArea}</dd></div>
+        {document.project && <div><dt>Project</dt><dd data-pagefind-meta="project">{document.project}</dd></div>}
+        {document.purposes?.length > 0 && <div><dt>Useful for</dt><dd data-pagefind-meta="purposes">{document.purposes.join(", ")}</dd></div>}
+        {document.audiences?.length > 0 && <div><dt>Audience</dt><dd data-pagefind-meta="audiences">{document.audiences.join(", ")}</dd></div>}
         {document.discipline?.length > 0 && <div><dt>Discipline</dt><dd data-pagefind-meta="discipline">{document.discipline.join(", ")}</dd></div>}
         <div><dt>Status</dt><dd data-pagefind-meta="status">{document.status}</dd></div>
         {document.version && <div><dt>Version</dt><dd>{document.version}</dd></div>}

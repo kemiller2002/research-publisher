@@ -6,13 +6,14 @@ const { document, baseUrl = "/" } = Astro.props;
 
 <article class="document-card">
   <div class="document-card__main">
-    <p class="eyebrow">{document.artifactType} {document.id ? `· ${document.id}` : ""}</p>
+    <p class="eyebrow">{document.entryPointLabel || document.artifactType} {document.id ? `· ${document.id}` : ""}</p>
     <h3><a href={withBasePath(baseUrl, document.url)}>{document.title}</a></h3>
     {document.summary && <p>{document.summary}</p>}
   </div>
   <dl class="inline-meta">
     <div><dt>Area</dt><dd>{document.researchArea}</dd></div>
     <div><dt>Status</dt><dd>{document.status}</dd></div>
+    {document.purposes?.length > 0 && <div><dt>Useful for</dt><dd>{document.purposes.join(", ")}</dd></div>}
     {document.updated && <div><dt>Updated</dt><dd>{document.updated}</dd></div>}
   </dl>
   <span class="document-card__arrow" aria-hidden="true">↗</span>

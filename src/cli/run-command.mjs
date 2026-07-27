@@ -1,5 +1,7 @@
 import fs from "node:fs/promises";
+import { constants } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { loadConfig } from "../build/config.mjs";
 import { buildProject } from "../build/project.mjs";
 import { inventoryProject } from "../content/inventory.mjs";
@@ -26,6 +28,24 @@ export async function runCommand(argv = process.argv) {
 
   if (command === "inventory") {
     await inventoryProject({ projectRoot, config });
+    return;
+  }
+
+  if (command === "install-prompt") {
+    const sourcePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../prompts/mark-research-documents.md");
+    const promptDirectory = path.join(projectRoot, "prompts");
+    const destinationPath = path.join(promptDirectory, "research-publisher-mark-documents.md");
+    await fs.mkdir(promptDirectory, { recursive: true });
+    try {
+      await fs.copyFile(sourcePath, destinationPath, constants.COPYFILE_EXCL);
+      process.stdout.write(`Installed document-marking prompt at ${destinationPath}.\n`);
+    } catch (error) {
+      if (error.code === "EEXIST") {
+        process.stdout.write(`Prompt already exists at ${destinationPath}; left it unchanged.\n`);
+        return;
+      }
+      throw error;
+    }
     return;
   }
 

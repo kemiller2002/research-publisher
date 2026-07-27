@@ -346,7 +346,7 @@ select:focus-visible {
   }
 
   .search-form {
-    grid-template-columns: minmax(15rem, 2fr) minmax(10rem, 1fr) minmax(10rem, 1fr) auto;
+    grid-template-columns: minmax(15rem, 2fr) repeat(3, minmax(9rem, 1fr)) auto;
     align-items: end;
   }
 }

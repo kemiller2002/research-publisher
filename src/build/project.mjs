@@ -41,14 +41,24 @@ function withBasePath(baseUrl, targetPath) {
 function summarizeDocuments(documents) {
   const byArtifactType = {};
   const byResearchArea = {};
+  const byProject = {};
+  const byPurpose = {};
   for (const document of documents) {
     byArtifactType[document.artifactType] = (byArtifactType[document.artifactType] ?? 0) + 1;
     byResearchArea[document.researchArea] = (byResearchArea[document.researchArea] ?? 0) + 1;
+    if (document.project) {
+      byProject[document.project] = (byProject[document.project] ?? 0) + 1;
+    }
+    for (const purpose of document.purposes) {
+      byPurpose[purpose] = (byPurpose[purpose] ?? 0) + 1;
+    }
   }
   return {
     totalDocuments: documents.length,
     byArtifactType,
-    byResearchArea
+    byResearchArea,
+    byProject,
+    byPurpose
   };
 }
 
@@ -122,6 +132,7 @@ async function verifyOutput({ outputDirectory, catalog }) {
   for (const requiredPath of [
     path.join(outputDirectory, "data/research-catalog.json"),
     path.join(outputDirectory, "data/research-graph.json"),
+    path.join(outputDirectory, "data/research-guides.json"),
     path.join(outputDirectory, "pagefind/pagefind.js")
   ]) {
     try {
@@ -152,7 +163,15 @@ function createCollections(documents) {
           url: document.url,
           artifactType: document.artifactType,
           summary: document.summary,
-          updated: document.updated
+          updated: document.updated,
+          project: document.project,
+          purposes: document.purposes,
+          audiences: document.audiences,
+          entryPoint: document.entryPoint,
+          entryPointOrder: document.entryPointOrder,
+          entryPointLabel: document.entryPointLabel,
+          status: document.status,
+          researchArea: document.researchArea
         });
       }
       return accumulator;
@@ -163,19 +182,63 @@ function createCollections(documents) {
     researchAreas: grouped("researchArea"),
     disciplines: grouped("discipline"),
     tags: grouped("tags"),
-    statuses: grouped("status")
+    statuses: grouped("status"),
+    projects: grouped("project"),
+    purposes: grouped("purposes"),
+    audiences: grouped("audiences")
   };
+}
+
+function createGuides(documents) {
+  return documents
+    .filter((document) => document.entryPoint)
+    .sort((left, right) => {
+      const projectComparison = (left.project ?? "").localeCompare(right.project ?? "");
+      if (projectComparison !== 0) {
+        return projectComparison;
+      }
+      const orderComparison = (left.entryPointOrder ?? 999) - (right.entryPointOrder ?? 999);
+      return orderComparison !== 0 ? orderComparison : left.title.localeCompare(right.title);
+    })
+    .reduce((guides, document) => {
+      const project = document.project ?? "unassigned";
+      guides[project] ??= [];
+      guides[project].push({
+        id: document.id,
+        title: document.title,
+        summary: document.summary,
+        url: document.url,
+        artifactType: document.artifactType,
+        project: document.project,
+        researchArea: document.researchArea,
+        status: document.status,
+        updated: document.updated,
+        purposes: document.purposes,
+        audiences: document.audiences,
+        entryPointLabel: document.entryPointLabel,
+        order: document.entryPointOrder
+      });
+      return guides;
+    }, {});
 }
 
 function createPublicCatalog(documents, config) {
   return {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     generatedOn: "2026-07-22",
     project: config.site.title,
     records: documents.map((document) => ({
       ...document,
       url: withBasePath(config.site.baseUrl, document.url)
     }))
+  };
+}
+
+function createPublicGuides(guides, config) {
+  return {
+    schemaVersion: "1.0",
+    generatedOn: "2026-07-27",
+    projects: createPublicCollections({ guides }, config).guides
   };
 }
 
@@ -228,7 +291,7 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   const dataDirectory = path.join(internalDirectory, "data");
   await ensureDirectory(dataDirectory);
   const internalCatalog = {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     generatedOn: "2026-07-22",
     project: config.site.title,
     records: normalized
@@ -236,11 +299,14 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   const catalog = createPublicCatalog(normalized, config);
   const publicGraph = createPublicGraph(graph, config);
   const collections = createCollections(normalized);
+  const guides = createGuides(normalized);
   const publicCollections = createPublicCollections(collections, config);
+  const publicGuides = createPublicGuides(guides, config);
 
   await writeJson(path.join(dataDirectory, "catalog.json"), internalCatalog);
   await writeJson(path.join(dataDirectory, "graph.json"), graph);
   await writeJson(path.join(dataDirectory, "collections.json"), collections);
+  await writeJson(path.join(dataDirectory, "guides.json"), guides);
   await writeJson(path.join(dataDirectory, "site.json"), {
     site: {
       ...config.site,
@@ -283,6 +349,7 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
     diagnostics
   });
   await writeJson(path.join(outputDirectory, "data/research-collections.json"), publicCollections);
+  await writeJson(path.join(outputDirectory, "data/research-guides.json"), publicGuides);
 
   const pagefindStarted = performance.now();
   await runPagefind({ engineRoot, outputDirectory });

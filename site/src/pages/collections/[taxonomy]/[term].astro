@@ -8,7 +8,10 @@ export function getStaticPaths() {
     "research-area": collections.researchAreas,
     discipline: collections.disciplines,
     tag: collections.tags,
-    status: collections.statuses
+    status: collections.statuses,
+    project: collections.projects,
+    purpose: collections.purposes,
+    audience: collections.audiences
   };
 
   return Object.entries(collectionMap).flatMap(([taxonomy, values]) =>
@@ -31,15 +34,30 @@ const collectionMap = {
   "research-area": collections.researchAreas,
   discipline: collections.disciplines,
   tag: collections.tags,
-  status: collections.statuses
+  status: collections.statuses,
+  project: collections.projects,
+  purpose: collections.purposes,
+  audience: collections.audiences
 };
-const documents = collectionMap[taxonomy]?.[term] ?? [];
+const documents = [...(collectionMap[taxonomy]?.[term] ?? [])].sort((left, right) => {
+  if (taxonomy !== "project") {
+    return 0;
+  }
+  if (left.entryPoint !== right.entryPoint) {
+    return left.entryPoint ? -1 : 1;
+  }
+  return (left.entryPointOrder ?? 999) - (right.entryPointOrder ?? 999);
+});
+const entryPointCount = documents.filter((document) => document.entryPoint).length;
+const description = taxonomy === "project" && entryPointCount > 0
+  ? `${entryPointCount} guided starting point${entryPointCount === 1 ? "" : "s"}, followed by the complete project record.`
+  : `Documents grouped under ${term}.`;
 ---
 
 <IndexLayout
   title={`${term} | ${taxonomy}`}
   heading={term}
-  description={`Documents grouped under ${term}.`}
+  description={description}
   documents={documents}
   site={siteData.site}
 />

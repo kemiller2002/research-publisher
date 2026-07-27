@@ -15,5 +15,5 @@ function readJson(name: string) {
 export const catalog = readJson("catalog.json");
 export const graph = readJson("graph.json");
 export const collections = readJson("collections.json");
+export const guides = readJson("guides.json");
 export const siteData = readJson("site.json");
-

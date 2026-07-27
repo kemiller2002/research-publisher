@@ -13,6 +13,9 @@
     "site/src",
     "site/astro.config.mjs",
     "site/package.json",
+    "docs/document-purpose-taxonomy.md",
+    "docs/research-metadata-schema.md",
+    "prompts/mark-research-documents.md",
     "README.md"
   ],
   "engines": {

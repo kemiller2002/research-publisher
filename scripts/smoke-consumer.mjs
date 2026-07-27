@@ -51,7 +51,8 @@ async function main() {
       private: true,
       type: "module",
       scripts: {
-        build: "research-publisher build --config ./research-publisher.config.mjs"
+        build: "research-publisher build --config ./research-publisher.config.mjs",
+        "install-prompt": "research-publisher install-prompt --config ./research-publisher.config.mjs"
       }
     }, null, 2)}\n`
   );
@@ -89,6 +90,13 @@ async function main() {
 id: RP-2026-900
 title: Smoke Consumer Document
 artifactType: research-package
+project: smoke-consumer
+purposes:
+  - orient
+audiences:
+  - contributor
+entryPoint: true
+entryPointOrder: 10
 researchArea: Smoke Testing
 discipline:
   - Engineering Practice
@@ -117,9 +125,12 @@ This file is built from a temporary consumer project that installs the package t
     env: npmEnv
   });
   await run("npm", ["run", "build"], { cwd: consumerDir, env: npmEnv });
+  await run("npm", ["run", "install-prompt"], { cwd: consumerDir, env: npmEnv });
 
   await fs.access(path.join(consumerDir, "dist/data/research-catalog.json"));
+  await fs.access(path.join(consumerDir, "dist/data/research-guides.json"));
   await fs.access(path.join(consumerDir, "dist/pagefind/pagefind.js"));
+  await fs.access(path.join(consumerDir, "prompts/research-publisher-mark-documents.md"));
 
   process.stdout.write(`Smoke consumer build passed in ${consumerDir}\n`);
 }
