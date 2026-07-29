@@ -6,6 +6,10 @@ const base = process.env.RESEARCH_PUBLISHER_BASE_URL || "/";
 export default defineConfig({
   site,
   base,
-  output: "static"
+  output: "static",
+  build: {
+    // Keep research pages portable across GitHub Pages project paths,
+    // artifact previews, and local static servers.
+    inlineStylesheets: "always"
+  }
 });
-

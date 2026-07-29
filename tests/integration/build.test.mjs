@@ -34,6 +34,9 @@ describe("integration build", () => {
     const indexHtml = await fs.readFile(path.join(workspaceRoot, "dist/index.html"), "utf8");
     expect(indexHtml).toContain("Build:");
     expect(indexHtml).toMatch(/Build:\s*<time datetime="[^"]+">/);
+    expect(indexHtml).toContain("<style");
+    expect(indexHtml).toContain("--color-bg");
+    expect(indexHtml).not.toMatch(/<link[^>]+rel="stylesheet"/);
     await expect(
       fs.access(path.join(workspaceRoot, "dist/research/adding-a-research-repository/index.html"))
     ).resolves.toBeUndefined();

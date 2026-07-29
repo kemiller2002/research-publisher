@@ -2,9 +2,9 @@ export default {
   site: {
     title: "Visual Engineering Research",
     description: "Searchable Visual Engineering research repository",
-    baseUrl: "/research-publisher/",
+    baseUrl: "/",
     language: "en",
-    siteUrl: "https://kemiller2002.github.io/research-publisher/"
+    siteUrl: "https://research-publisher.echelonfoundry.com/"
   },
   repository: {
     name: "research-publisher",
