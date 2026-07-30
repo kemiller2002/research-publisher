@@ -36,6 +36,7 @@ describe("integration build", () => {
     expect(indexHtml).toMatch(/Build:\s*<time datetime="[^"]+">/);
     expect(indexHtml).toContain("<style");
     expect(indexHtml).toContain("--color-bg");
+    expect(indexHtml).toContain('<span class="site-mark" aria-hidden="true">VE</span>');
     expect(indexHtml).not.toMatch(/<link[^>]+rel="stylesheet"/);
     await expect(
       fs.access(path.join(workspaceRoot, "dist/research/adding-a-research-repository/index.html"))
@@ -51,5 +52,7 @@ describe("integration build", () => {
       await fs.readFile(path.join(workspaceRoot, "fixtures/alt-research/dist/data/research-guides.json"), "utf8")
     );
     expect(guides.projects["civic-dashboard"]).toHaveLength(1);
+    const indexHtml = await fs.readFile(path.join(workspaceRoot, "fixtures/alt-research/dist/index.html"), "utf8");
+    expect(indexHtml).toContain('<span class="site-mark" aria-hidden="true">CSN</span>');
   }, 120000);
 });

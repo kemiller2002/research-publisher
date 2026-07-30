@@ -4,6 +4,17 @@ import { withBasePath } from "../utils/paths";
 
 const { title, description, site, navItems = [] } = Astro.props;
 const homeHref = withBasePath(site.baseUrl, "/");
+const siteTitleWords = String(site.title ?? "")
+  .trim()
+  .split(/\s+/)
+  .filter(Boolean);
+if (siteTitleWords.at(-1)?.toLowerCase() === "research" && siteTitleWords.length > 1) {
+  siteTitleWords.pop();
+}
+const siteMark = siteTitleWords
+  .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0] ?? "")
+  .join("")
+  .toUpperCase() || "RP";
 const buildGeneratedAt = site.buildGeneratedAt ?? null;
 const buildGeneratedAtDate = buildGeneratedAt ? new Date(buildGeneratedAt) : null;
 const buildGeneratedAtLabel =
@@ -38,7 +49,7 @@ const isCurrent = (href) => {
     <header class="site-header">
       <div class="site-header__inner">
         <div class="site-identity">
-          <span class="site-mark" aria-hidden="true">VE</span>
+          <span class="site-mark" aria-hidden="true">{siteMark}</span>
           <div>
           <a class="site-title" href={homeHref}>{site.title}</a>
             <p class="site-description">An open index of evidence, theory, and practice</p>
