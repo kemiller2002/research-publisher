@@ -20,9 +20,13 @@ describe("integration build", () => {
     const guides = JSON.parse(await fs.readFile(path.join(workspaceRoot, "dist/data/research-guides.json"), "utf8"));
     expect(guides.schemaVersion).toBe("1.0");
     expect(guides.projects["research-publisher"][0]).toMatchObject({
+      id: "RP-2026-002",
+      entryPointLabel: "Findings abstract",
+      purposes: ["orient", "decide", "integrate", "apply"]
+    });
+    expect(guides.projects["research-publisher"][1]).toMatchObject({
       id: "RP-2026-001",
-      entryPointLabel: "Start here",
-      purposes: ["orient", "integrate", "decide"]
+      entryPointLabel: "Start here"
     });
     const projectHtml = await fs.readFile(
       path.join(workspaceRoot, "dist/collections/project/research-publisher/index.html"),
@@ -38,6 +42,19 @@ describe("integration build", () => {
     expect(indexHtml).toContain("--color-bg");
     expect(indexHtml).toContain('<span class="site-mark" aria-hidden="true">VE</span>');
     expect(indexHtml).not.toMatch(/<link[^>]+rel="stylesheet"/);
+    expect(indexHtml).toContain("Research Publisher Findings Abstract");
+    const schemaHtml = await fs.readFile(
+      path.join(workspaceRoot, "dist/research/research-metadata-schema/index.html"),
+      "utf8"
+    );
+    expect(schemaHtml).toContain('href="/research/document-purpose-and-project-guide-architecture/"');
+    expect(schemaHtml).not.toMatch(/href="[^"]*\.md(?:[?#][^"]*)?"/);
+    const abstractHtml = await fs.readFile(
+      path.join(workspaceRoot, "dist/research/rp-2026-002-research-publisher-findings-abstract/index.html"),
+      "utf8"
+    );
+    expect(abstractHtml).toContain('href="/research/ev-2026-001-static-site-sufficiency-evidence/"');
+    expect(abstractHtml).not.toMatch(/href="[^"]*\.md(?:[?#][^"]*)?"/);
     await expect(
       fs.access(path.join(workspaceRoot, "dist/research/adding-a-research-repository/index.html"))
     ).resolves.toBeUndefined();

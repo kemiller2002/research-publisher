@@ -4,7 +4,8 @@ import { performance } from "node:perf_hooks";
 import { spawn } from "node:child_process";
 import { inventoryProject } from "../content/inventory.mjs";
 import { discoverFiles } from "../content/discover.mjs";
-import { parseDocument } from "../content/parse-document.mjs";
+import { parseDocument, renderDocumentHtml } from "../content/parse-document.mjs";
+import { resolveDocumentLink } from "../content/resolve-link.mjs";
 import { normalizeDocument } from "../metadata/normalize.mjs";
 import { validateDocuments } from "../validation/validate.mjs";
 import { buildRelationshipGraph } from "../relationships/graph.mjs";
@@ -283,8 +284,35 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   const parsed = await Promise.all(discovered.map((relativePath) => parseDocument(projectRoot, relativePath)));
   const parseTimeMs = performance.now() - parseStarted;
 
-  const normalized = parsed.map(normalizeDocument).sort((left, right) => left.url.localeCompare(right.url));
-  const diagnostics = validateDocuments(normalized);
+  const parsedBySourcePath = new Map(parsed.map((document) => [document.relativePath, document]));
+  const normalizedWithoutResolvedLinks = parsed.map(normalizeDocument);
+  const documentsBySourcePath = new Map(
+    normalizedWithoutResolvedLinks.map((document) => [document.sourcePath, document])
+  );
+  const unresolvedLinkDiagnostics = [];
+  const normalized = await Promise.all(normalizedWithoutResolvedLinks.map(async (document) => {
+    const parsedDocument = parsedBySourcePath.get(document.sourcePath);
+    const html = await renderDocumentHtml(parsedDocument.body, (href) => {
+      const resolution = resolveDocumentLink({
+        sourcePath: document.sourcePath,
+        href,
+        documentsBySourcePath,
+        baseUrl: config.site.baseUrl
+      });
+      if (resolution.markdown && !resolution.resolved) {
+        unresolvedLinkDiagnostics.push({
+          severity: "warning",
+          code: "unresolved-markdown-link",
+          sourcePath: document.sourcePath,
+          message: `Markdown link ${href} does not match a published source document.`
+        });
+      }
+      return resolution.href;
+    });
+    return { ...document, html };
+  }));
+  normalized.sort((left, right) => left.url.localeCompare(right.url));
+  const diagnostics = validateDocuments(normalized).concat(unresolvedLinkDiagnostics);
   const graph = buildRelationshipGraph(normalized);
   const outputDirectory = path.join(projectRoot, config.output.directory);
   const internalDirectory = path.join(projectRoot, ".research-publisher", path.basename(config.output.directory) || "dist");

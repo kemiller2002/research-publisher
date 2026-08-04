@@ -10,6 +10,28 @@ import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import { visit } from "unist-util-visit";
 
+function rewriteLinks(rewriteLink) {
+  return () => (tree) => {
+    visit(tree, "link", (node) => {
+      node.url = rewriteLink(node.url);
+    });
+  };
+}
+
+export async function renderDocumentHtml(markdown, rewriteLink = (url) => url) {
+  return String(
+    await unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(rewriteLinks(rewriteLink))
+      .use(remarkRehype)
+      .use(rehypeSanitize)
+      .use(rehypeSlug)
+      .use(rehypeStringify)
+      .process(markdown)
+  );
+}
+
 export async function parseDocument(projectRoot, relativePath) {
   const absolutePath = path.join(projectRoot, relativePath);
   const raw = await fs.readFile(absolutePath, "utf8");
@@ -36,16 +58,7 @@ export async function parseDocument(projectRoot, relativePath) {
     }
   });
 
-  const html = String(
-    await unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkRehype)
-      .use(rehypeSanitize)
-      .use(rehypeSlug)
-      .use(rehypeStringify)
-      .process(parsed.content)
-  );
+  const html = await renderDocumentHtml(parsed.content);
 
   return {
     absolutePath,
@@ -59,4 +72,3 @@ export async function parseDocument(projectRoot, relativePath) {
     html
   };
 }
-
