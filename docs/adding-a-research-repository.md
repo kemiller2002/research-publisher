@@ -29,12 +29,12 @@ If you keep the publisher in a submodule, treat the content repository as the pr
 
 In that layout, the publisher package supplies code and templates, while `dist/`, Pagefind output, catalogs, and diagnostics stay in the main repository.
 
-## Git Dependency Layout
+## npm Dependency Layout
 
-The recommended multi-repository setup is a Git dependency instead of a submodule:
+The recommended multi-repository setup is the public organization-scoped npm package instead of a submodule:
 
 ```bash
-npm install -D git+https://github.com/kemiller2002/research-publisher.git#v0.1.0
+npm install -D @echelon-foundry/research-publisher
 ```
 
 Then keep the consumer repository focused on:
@@ -43,4 +43,4 @@ Then keep the consumer repository focused on:
 - content directories such as `research/`
 - local build output such as `dist/`
 
-Test changes locally by editing the package repository, running `npm test`, `npm run smoke:consumer`, and `npm run research:build`, then tag a release and update the consumer repository to that tag.
+Test changes locally by editing the package repository and running `npm test`, `npm run smoke:consumer`, and `npm run research:build`. Publish a new semantic version, then update the consumer repository to that version.

@@ -59,15 +59,6 @@ export default {
   },
   branding: {
     logo: null,
-    cssVariables: {
-      "--color-bg": "#f6f3ea",
-      "--color-surface": "#fffdf8",
-      "--color-ink": "#1b2129",
-      "--color-accent": "#9d3c12",
-      "--color-accent-soft": "#f6d6c7",
-      "--color-border": "#dccfc0",
-      "--font-display": "\"Fraunces\", Georgia, serif",
-      "--font-body": "\"Source Sans 3\", system-ui, sans-serif"
-    }
+    cssVariables: {}
   }
 };

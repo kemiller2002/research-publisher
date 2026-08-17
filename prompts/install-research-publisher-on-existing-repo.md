@@ -27,13 +27,13 @@ Do not stop at a plan. Implement the setup.
 
 # Package Installation Command
 
-Install the package using exactly this command:
+Install the public organization-scoped package using exactly this command:
 
 ```bash
-npm install -D git+https://github.com/kemiller2002/research-publisher.git#main
+npm install -D @echelon-foundry/research-publisher
 ```
 
-Do not substitute a tag, local path, or npm registry version unless the command above is impossible and you document the reason clearly.
+Do not substitute a Git dependency, local path, or another registry version unless the command above is impossible and you document the reason clearly.
 
 ---
 
@@ -61,6 +61,14 @@ and the built site should exist in:
 ```text
 dist/
 ```
+
+After installing the package, run the safe initializer as the starting point:
+
+```bash
+npx research-publisher init
+```
+
+Inspect and adapt its generated configuration using the repository investigation below. The initializer does not overwrite an existing config, prompt, or package script.
 
 ---
 

@@ -39,7 +39,9 @@ describe("integration build", () => {
     expect(indexHtml).toContain("Build:");
     expect(indexHtml).toMatch(/Build:\s*<time datetime="[^"]+">/);
     expect(indexHtml).toContain("<style");
-    expect(indexHtml).toContain("--color-bg");
+    expect(indexHtml).toMatch(/--color-bg:\s*#f2efe7/);
+    expect(indexHtml).toMatch(/--color-accent:\s*#905831/);
+    expect(indexHtml).toMatch(/--color-focus-ring-inverse:\s*#f2efe7/);
     expect(indexHtml).toContain('<span class="site-mark" aria-hidden="true">VE</span>');
     expect(indexHtml).not.toMatch(/<link[^>]+rel="stylesheet"/);
     expect(indexHtml).toContain("Research Publisher Findings Abstract");
@@ -71,5 +73,9 @@ describe("integration build", () => {
     expect(guides.projects["civic-dashboard"]).toHaveLength(1);
     const indexHtml = await fs.readFile(path.join(workspaceRoot, "fixtures/alt-research/dist/index.html"), "utf8");
     expect(indexHtml).toContain('<span class="site-mark" aria-hidden="true">CSN</span>');
+    expect(indexHtml).toContain("--color-bg:#eef6ff");
+    expect(indexHtml).toContain("--color-accent:#0f766e");
+    expect(indexHtml).toMatch(/@layer research-publisher-defaults\s*\{/);
+    expect(indexHtml).toMatch(/--color-code-ink:\s*#3a403c/);
   }, 120000);
 });

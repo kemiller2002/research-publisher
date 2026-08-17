@@ -1,26 +1,35 @@
-:root {
-  --color-bg: #f3f1ea;
-  --color-surface: #faf9f5;
-  --color-ink: #18201d;
-  --color-accent: #b7471a;
-  --color-accent-strong: #84300f;
-  --color-accent-soft: #f2d6c8;
-  --color-border: #cbc8bc;
-  --color-border-strong: #999b91;
-  --color-muted: #59615d;
-  --color-dark: #18201d;
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Source Sans 3", system-ui, sans-serif;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
-  --radius: 0.25rem;
-  --shadow: 0 18px 50px rgba(24, 32, 29, 0.07);
-  --content-width: 76rem;
-  --reading-width: 68ch;
+/* Layered defaults always yield to unlayered host-repository overrides. */
+@layer research-publisher-defaults {
+  :root {
+    --color-bg: #f2efe7;
+    --color-surface: #e3e0d7;
+    --color-ink: #171a18;
+    --color-accent: #905831;
+    --color-accent-strong: #202421;
+    --color-accent-soft: #e3e0d7;
+    --color-on-accent: #f2efe7;
+    --color-border: #e3e0d7;
+    --color-border-strong: #3a403c;
+    --color-muted: #686d68;
+    --color-dark: #202421;
+    --color-code-ink: #3a403c;
+    --color-on-dark: #f2efe7;
+    --color-focus-ring: #171a18;
+    --color-focus-ring-inverse: #f2efe7;
+    --color-print-bg: #f2efe7;
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body: "Source Sans 3", system-ui, sans-serif;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+    --radius: 0.25rem;
+    --shadow: 0 18px 50px rgba(24, 32, 29, 0.07);
+    --content-width: 76rem;
+    --reading-width: 68ch;
+  }
 }

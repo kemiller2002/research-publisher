@@ -39,13 +39,44 @@ This repo also contains a demo research corpus and GitHub Pages site at the root
 - `npm run research:build` builds the demo site in this repo
 - `npm run smoke:consumer` packs the package and installs it into a temporary consumer project to verify package-style usage
 
-## Using From Git
+## Install From npm
 
 In a consuming repository:
 
 ```bash
-npm install -D git+https://github.com/kemiller2002/research-publisher.git#v0.1.0
+npm install -D @echelon-foundry/research-publisher
 ```
+
+Then initialize the repository:
+
+```bash
+npx research-publisher init
+```
+
+The initializer is safe to rerun. It:
+
+- creates `research-publisher.config.mjs` only when missing
+- installs `prompts/research-publisher-mark-documents.md` only when missing
+- adds missing research scripts while preserving existing scripts
+- uses broad Markdown discovery with generated, vendored, prompt, and archive exclusions
+
+It does not use `postinstall` because dependency installation should not silently rewrite a consumer repository. Review the generated site URL and base path before deploying.
+
+### Host colors
+
+Research Publisher supplies a complete default palette. A host repository can override semantic color roles in `research-publisher.config.mjs` without copying or changing package CSS:
+
+```js
+branding: {
+  cssVariables: {
+    "--color-accent": "#2457a6",
+    "--color-accent-strong": "#173b73",
+    "--color-accent-soft": "#dce8fa"
+  }
+}
+```
+
+Unspecified roles retain their package defaults, preserving layout and visual unity across sites. See [Theming Research Publisher](./docs/theming.md) for the supported color roles and accessibility guidance.
 
 Then add scripts like:
 

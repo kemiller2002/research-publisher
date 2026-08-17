@@ -1,6 +1,25 @@
 {
-  "name": "research-publisher",
+  "name": "@echelon-foundry/research-publisher",
   "version": "0.1.0",
+  "description": "Publish structured research documents as a searchable static website.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kemiller2002/research-publisher.git"
+  },
+  "homepage": "https://github.com/kemiller2002/research-publisher#readme",
+  "bugs": {
+    "url": "https://github.com/kemiller2002/research-publisher/issues"
+  },
+  "keywords": [
+    "research",
+    "publishing",
+    "markdown",
+    "astro",
+    "static-site"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "bin": {
     "research-publisher": "./src/cli/index.mjs"
@@ -15,6 +34,7 @@
     "site/package.json",
     "docs/document-purpose-taxonomy.md",
     "docs/research-metadata-schema.md",
+    "docs/theming.md",
     "prompts/mark-research-documents.md",
     "README.md"
   ],

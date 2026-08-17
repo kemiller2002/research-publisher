@@ -8,7 +8,7 @@ button {
   border-radius: var(--radius);
   border: 1px solid var(--color-accent);
   background: var(--color-accent);
-  color: white;
+  color: var(--color-on-accent);
   text-decoration: none;
   font-weight: 700;
 }
@@ -278,7 +278,7 @@ button {
 
 .document-body p,
 .document-body li {
-  color: #303936;
+  color: var(--color-code-ink);
 }
 
 .document-body blockquote {
@@ -292,7 +292,7 @@ button {
   overflow-x: auto;
   padding: var(--space-6);
   background: var(--color-dark);
-  color: #f7f5ee;
+  color: var(--color-on-dark);
 }
 
 .search-form {
@@ -328,7 +328,7 @@ a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-accent) 60%, white);
+  outline: 3px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 

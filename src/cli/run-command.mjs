@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
-import { constants } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { loadConfig } from "../build/config.mjs";
 import { buildProject } from "../build/project.mjs";
 import { inventoryProject } from "../content/inventory.mjs";
+import { initializeProject } from "./init-project.mjs";
+import { installMarkingPrompt } from "./install-prompt.mjs";
 
 function parseArgs(argv) {
   const result = {
@@ -24,6 +24,20 @@ function parseArgs(argv) {
 
 export async function runCommand(argv = process.argv) {
   const { command, configPath } = parseArgs(argv);
+  if (command === "init") {
+    const result = await initializeProject(process.cwd());
+    process.stdout.write([
+      result.configCreated ? `Created ${result.configPath}.` : `Kept existing ${result.configPath}.`,
+      result.promptCreated ? `Created ${result.promptPath}.` : `Kept existing ${result.promptPath}.`,
+      result.scriptsAdded.length > 0
+        ? `Added package scripts: ${result.scriptsAdded.join(", ")}.`
+        : "Required package scripts already exist.",
+      "Next: review research-publisher.config.mjs, then run npm run research:inventory and npm run research:build.",
+      ""
+    ].join("\n"));
+    return;
+  }
+
   const { config, projectRoot, engineRoot } = await loadConfig(configPath);
 
   if (command === "inventory") {
@@ -32,20 +46,10 @@ export async function runCommand(argv = process.argv) {
   }
 
   if (command === "install-prompt") {
-    const sourcePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../prompts/mark-research-documents.md");
-    const promptDirectory = path.join(projectRoot, "prompts");
-    const destinationPath = path.join(promptDirectory, "research-publisher-mark-documents.md");
-    await fs.mkdir(promptDirectory, { recursive: true });
-    try {
-      await fs.copyFile(sourcePath, destinationPath, constants.COPYFILE_EXCL);
-      process.stdout.write(`Installed document-marking prompt at ${destinationPath}.\n`);
-    } catch (error) {
-      if (error.code === "EEXIST") {
-        process.stdout.write(`Prompt already exists at ${destinationPath}; left it unchanged.\n`);
-        return;
-      }
-      throw error;
-    }
+    const result = await installMarkingPrompt(projectRoot);
+    process.stdout.write(result.created
+      ? `Installed document-marking prompt at ${result.path}.\n`
+      : `Prompt already exists at ${result.path}; left it unchanged.\n`);
     return;
   }
 

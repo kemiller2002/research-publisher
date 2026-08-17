@@ -29,7 +29,7 @@ Do not stop at analysis. Implement the upgrade.
 Upgrade the repository to use exactly this dependency source unless repository constraints require something more specific:
 
 ```bash
-npm install -D git+https://github.com/kemiller2002/research-publisher.git#main
+npm install -D @echelon-foundry/research-publisher@latest
 ```
 
 If the repository intentionally pins a release tag or commit SHA for stability, do not silently replace that policy. In that case:
@@ -331,4 +331,3 @@ Call out:
 - Make the upgrade usable, not theoretical.
 - Finish the upgrade end to end.
 ```
-
