@@ -22,7 +22,7 @@
   },
   "type": "module",
   "bin": {
-    "research-publisher": "./src/cli/index.mjs"
+    "research-publisher": "src/cli/index.mjs"
   },
   "exports": {
     ".": "./src/index.mjs"
