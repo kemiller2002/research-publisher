@@ -1,24 +1,31 @@
 name: Publish npm Package
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_run:
+    workflows:
+      - Publish Research
+    types:
+      - completed
+    branches:
+      - main
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: npm-publish-${{ github.ref }}
+  group: npm-publish-main
   cancel-in-progress: false
 
 jobs:
   publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up Node 24
         uses: actions/setup-node@v6
@@ -36,5 +43,35 @@ jobs:
       - name: Verify package contents
         run: npm pack --dry-run
 
+      - name: Select the next npm version
+        id: version
+        shell: bash
+        run: |
+          package_name="$(node --print "require('./package.json').name")"
+          local_version="$(node --print "require('./package.json').version")"
+          published_version="$(npm view "$package_name" version 2>/dev/null || true)"
+          next_version="$(node --input-type=module -e '
+            const [localVersion, publishedVersion] = process.argv.slice(1);
+            const parts = (version) => version.split("-")[0].split(".").map(Number);
+            const compare = (left, right) => {
+              const a = parts(left);
+              const b = parts(right);
+              return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+            };
+            if (!publishedVersion || compare(localVersion, publishedVersion) > 0) {
+              console.log(localVersion);
+            } else {
+              const [major, minor, patch] = parts(publishedVersion);
+              console.log(`${major}.${minor}.${patch + 1}`);
+            }
+          ' "$local_version" "$published_version")"
+          echo "version=$next_version" >> "$GITHUB_OUTPUT"
+          if [[ "$next_version" != "$local_version" ]]; then
+            npm version "$next_version" --no-git-tag-version
+          fi
+
       - name: Publish package
         run: npm publish
+
+      - name: Report published version
+        run: echo "Published @echelon-foundry/research-publisher@${{ steps.version.outputs.version }}"
