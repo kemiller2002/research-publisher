@@ -92,25 +92,52 @@ module PlanningTests =
         Assert.Contains("\"research:build\": \"my-own-build\"", packageJson)
         Assert.Contains("\"research:verify\"", packageJson)
 
+    /// Written with explicit line endings so the assertions do not depend on how
+    /// the repository was checked out.
+    let private fourSpacePackageJson (lineEnding: string) =
+        [ "{"
+          "    \"name\": \"example-research\","
+          "    \"version\": \"2.0.0\","
+          "    \"private\": true,"
+          "    \"scripts\": {"
+          "        \"test\": \"vitest\""
+          "    }"
+          "}"
+          "" ]
+        |> String.concat lineEnding
+
     [<Fact>]
     let ``package json key order and indentation survive`` () =
         use repository = new TestRepository()
-
-        repository.WritePackageJson """{
-    "name": "example-research",
-    "version": "2.0.0",
-    "private": true,
-    "scripts": {
-        "test": "vitest"
-    }
-}
-"""
+        repository.WritePackageJson(fourSpacePackageJson "\n")
 
         Api.apply (planInit repository) |> ignore
         let packageJson = repository.Read "package.json"
 
         Assert.StartsWith("{\n    \"name\": \"example-research\",\n    \"version\": \"2.0.0\",", packageJson)
         Assert.Contains("        \"test\": \"vitest\",", packageJson)
+
+    [<Fact>]
+    let ``package json line endings survive`` () =
+        // Rewriting a file must not convert it wholesale, which is what
+        // Utf8JsonWriter would do on Windows if its output were used verbatim.
+        for lineEnding in [ "\n"; "\r\n" ] do
+            use repository = new TestRepository()
+            repository.WritePackageJson(fourSpacePackageJson lineEnding)
+
+            Api.apply (planInit repository) |> ignore
+            let packageJson = repository.Read "package.json"
+
+            Assert.Contains("\"research:verify\"", packageJson)
+            Assert.Equal(lineEnding, if packageJson.Contains "\r\n" then "\r\n" else "\n")
+
+    [<Fact>]
+    let ``the installation manifest is written with canonical line endings`` () =
+        use repository = new TestRepository()
+        repository.WriteMinimalPackageJson()
+        Api.apply (planInit repository) |> ignore
+
+        Assert.DoesNotContain("\r\n", repository.Read Identity.ManifestPath)
 
     [<Fact>]
     let ``init without package json is blocked and changes nothing`` () =

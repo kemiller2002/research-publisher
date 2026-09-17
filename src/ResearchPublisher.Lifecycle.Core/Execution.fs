@@ -90,8 +90,14 @@ module Execution =
                             Ok []
                         else
                             let indent = Json.detectIndentWidth text
+                            let lineEnding = Json.detectLineEnding text
                             let rendered = Json.renderNode true (root :> JsonNode)
-                            FileSystem.writeTextAtomic packageJsonPath (Json.reindent indent rendered + "\n")
+
+                            let contents =
+                                Json.reindent indent rendered + "\n"
+                                |> Json.applyLineEnding lineEnding
+
+                            FileSystem.writeTextAtomic packageJsonPath contents
                             Ok added
                     | _ -> Result.Error "package.json does not contain a JSON object."
 

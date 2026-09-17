@@ -26,13 +26,19 @@ module Json =
     let private nodeDocumentOptions =
         JsonNodeOptions(PropertyNameCaseInsensitive = false)
 
+    /// `Utf8JsonWriter` indents with `Environment.NewLine`, which would make every
+    /// document this tool writes depend on the operating system it ran on. Output
+    /// is normalized to LF so a file written on Windows matches one written on
+    /// Linux, and callers that need to preserve a different ending reapply it.
+    let normalizeNewlines (text: string) = text.Replace("\r\n", "\n")
+
     /// Render a document through an explicit writer callback.
     let write (indented: bool) (writeBody: Utf8JsonWriter -> unit) =
         use stream = new MemoryStream()
         (use writer = new Utf8JsonWriter(stream, writerOptions indented)
          writeBody writer
          writer.Flush())
-        Encoding.UTF8.GetString(stream.ToArray())
+        normalizeNewlines (Encoding.UTF8.GetString(stream.ToArray()))
 
     let writeString (writer: Utf8JsonWriter) (name: string) (value: string) =
         writer.WriteString(name, value)
@@ -104,7 +110,16 @@ module Json =
 
     /// Serialize a mutable node tree, preserving property order.
     let renderNode (indented: bool) (node: JsonNode) =
-        node.ToJsonString(nodeOptions indented)
+        normalizeNewlines (node.ToJsonString(nodeOptions indented))
+
+    /// The line ending an existing document uses, so rewriting it does not convert
+    /// the whole file and produce a diff that is entirely noise.
+    let detectLineEnding (text: string) =
+        if text.Contains "\r\n" then "\r\n" else "\n"
+
+    /// Reapply a line ending to normalized output.
+    let applyLineEnding (lineEnding: string) (text: string) =
+        if lineEnding = "\n" then text else text.Replace("\n", lineEnding)
 
     /// Guess the indentation width of an existing JSON document so rewriting it
     /// does not reformat a consuming repository's file.

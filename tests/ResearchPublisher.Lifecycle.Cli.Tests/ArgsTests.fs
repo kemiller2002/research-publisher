@@ -1,5 +1,6 @@
 namespace ResearchPublisher.Lifecycle.Cli.Tests
 
+open System.IO
 open Xunit
 open ResearchPublisher.Lifecycle.Cli
 
@@ -66,16 +67,21 @@ module ArgsTests =
         | Doctor options -> Assert.True options.Strict
         | other -> failwithf "Expected doctor, got %A" other
 
+    /// Absolute-path resolution is platform specific: on Windows a rooted path
+    /// without a drive resolves against the current drive. The expectations are
+    /// built the same way the CLI builds them so the assertions hold everywhere.
+    let private absolute path = Path.GetFullPath(path: string)
+
     [<Fact>]
     let ``the repository can be selected explicitly`` () =
         match expectOk [ "status"; "--repo"; "/tmp" ] with
-        | Status options -> Assert.Equal("/tmp", options.Common.RepositoryRoot)
+        | Status options -> Assert.Equal(absolute "/tmp", options.Common.RepositoryRoot)
         | other -> failwithf "Expected status, got %A" other
 
     [<Fact>]
     let ``a config path selects the repository that contains it`` () =
         match expectOk [ "verify"; "--config"; "/tmp/repo/research-publisher.config.mjs" ] with
-        | Verify options -> Assert.Equal("/tmp/repo", options.Common.RepositoryRoot)
+        | Verify options -> Assert.Equal(absolute "/tmp/repo", options.Common.RepositoryRoot)
         | other -> failwithf "Expected verify, got %A" other
 
     [<Fact>]
@@ -98,5 +104,5 @@ module ArgsTests =
     [<Fact>]
     let ``the legacy install-prompt command still parses`` () =
         match expectOk [ "install-prompt"; "--config"; "/tmp/repo/research-publisher.config.mjs" ] with
-        | InstallPrompt common -> Assert.Equal("/tmp/repo", common.RepositoryRoot)
+        | InstallPrompt common -> Assert.Equal(absolute "/tmp/repo", common.RepositoryRoot)
         | other -> failwithf "Expected install-prompt, got %A" other
