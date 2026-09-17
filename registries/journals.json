@@ -1,0 +1,28 @@
+[
+  {
+    "artifactType": "journal-entry",
+    "authorAgent": "codex",
+    "completion": 0.55,
+    "confidence": 0.61,
+    "created": "2026-07-22",
+    "discipline": [
+      "Engineering Practice"
+    ],
+    "id": "JR-2026-001",
+    "path": "research/journals/JR-2026-001-build-log.md",
+    "priority": "low",
+    "relatedDocuments": [
+      "RP-2026-001"
+    ],
+    "researchArea": "Visual Engineering",
+    "status": "active",
+    "summary": "Journal of the first implementation pass.",
+    "tags": [
+      "journal",
+      "implementation"
+    ],
+    "title": "Research Publisher Build Journal",
+    "updated": "2026-07-22",
+    "version": "1.0"
+  }
+]

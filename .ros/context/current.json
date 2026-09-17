@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "protocolVersion": "1.0.0",
+  "repository": "research-publisher",
+  "actor": "ros-bootstrap",
+  "startedAt": "2026-09-17T10:37:23.499Z",
+  "updatedAt": "2026-09-17T10:37:23.499Z",
+  "baselineDirtyPaths": [],
+  "workItems": [
+    {
+      "id": "ROS-INSTALL-1-2-1",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "installation",
+          "path": ".ros/installation.json"
+        }
+      ],
+      "updatedAt": "2026-09-17T10:37:23.499Z",
+      "completedAt": "2026-09-17T10:37:23.499Z"
+    }
+  ]
+}
