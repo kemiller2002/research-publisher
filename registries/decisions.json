@@ -1,1 +1,51 @@
-[]
+[
+  {
+    "artifactType": "decision-framework",
+    "authorAgent": "codex",
+    "completion": 1,
+    "confidence": 0.79,
+    "created": "2026-07-22",
+    "discipline": [
+      "Information Architecture"
+    ],
+    "id": "DF-VE-2026-0001",
+    "path": "research/decisions/DF-VE-2026-0001--public-catalog.md",
+    "priority": "medium",
+    "relatedDocuments": [
+      "RP-VE-2026-0001"
+    ],
+    "researchArea": "Visual Engineering",
+    "status": "accepted",
+    "summary": "A stable JSON catalog gives other tools a reliable contract independent from search internals.",
+    "tags": [
+      "concept",
+      "catalog"
+    ],
+    "title": "Public Research Catalog",
+    "updated": "2026-07-22",
+    "version": "1.0"
+  },
+  {
+    "artifactType": "decision-framework",
+    "authorAgent": "codex",
+    "completion": 1,
+    "confidence": 1,
+    "created": "2026-07-22",
+    "discipline": [
+      "Web Architecture"
+    ],
+    "id": "DF-VE-2026-0002",
+    "path": "research/decisions/DF-VE-2026-0002--search-index.md",
+    "priority": "low",
+    "researchArea": "Visual Engineering",
+    "status": "accepted",
+    "summary": "Generated artifact optimized for full-text retrieval over rendered documents.",
+    "tags": [
+      "glossary",
+      "search"
+    ],
+    "title": "Search Index",
+    "updated": "2026-07-22",
+    "version": "1.0"
+  }
+]

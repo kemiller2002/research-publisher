@@ -1,12 +1,12 @@
 ---
-id: GL-2026-001
+id: DF-VE-2026-0002
 title: Search Index
-artifactType: glossary
+artifactType: decision-framework
 researchArea: Visual Engineering
 discipline:
   - Web Architecture
 summary: Generated artifact optimized for full-text retrieval over rendered documents.
-status: active
+status: accepted
 version: "1.0"
 confidence: 1
 completion: 1

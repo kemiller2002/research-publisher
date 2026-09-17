@@ -1,12 +1,12 @@
 ---
-id: CN-2026-001
+id: DF-VE-2026-0001
 title: Public Research Catalog
-artifactType: concept
+artifactType: decision-framework
 researchArea: Visual Engineering
 discipline:
   - Information Architecture
 summary: A stable JSON catalog gives other tools a reliable contract independent from search internals.
-status: active
+status: accepted
 version: "1.0"
 confidence: 0.79
 completion: 1

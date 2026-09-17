@@ -38,7 +38,7 @@ relatedDocuments:
   - EV-VE-2026-0001
   - HY-VE-2026-0001
   - TH-VE-2026-0001
-  - CN-2026-001
+  - DF-VE-2026-0001
 evidenceIds:
   - EV-VE-2026-0001
 hypothesisIds:
@@ -61,7 +61,7 @@ The corpus is read-oriented, version-controlled, and does not require authentica
 
 ### Search and structured data are separate products
 
-Full-text search is optimized for retrieval, while a public catalog is a stable interface for agents, dashboards, and other tools. Treating the search index as the public data contract would couple consumers to Pagefind internals. The [public catalog concept](../concepts/CN-2026-001-public-catalog.md) records this separation.
+Full-text search is optimized for retrieval, while a public catalog is a stable interface for agents, dashboards, and other tools. Treating the search index as the public data contract would couple consumers to Pagefind internals. The [public catalog concept](../decisions/DF-VE-2026-0001--public-catalog.md) records this separation.
 
 ### Reuse depends on architectural separation
 
