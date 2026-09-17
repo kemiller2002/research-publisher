@@ -36,13 +36,13 @@ keywords:
   - pagefind
 relatedDocuments:
   - DF-2026-001
-  - HY-2026-001
+  - HY-VE-2026-0001
 evidenceIds:
-  - EV-2026-001
+  - EV-VE-2026-0001
 hypothesisIds:
-  - HY-2026-001
+  - HY-VE-2026-0001
 theoryIds:
-  - TH-2026-001
+  - TH-VE-2026-0001
 ---
 
 ## Executive Summary

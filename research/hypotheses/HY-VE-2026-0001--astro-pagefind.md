@@ -1,5 +1,5 @@
 ---
-id: HY-2026-001
+id: HY-VE-2026-0001
 title: Astro Plus Pagefind Is the Best Initial Stack
 artifactType: hypothesis
 researchArea: Visual Engineering
@@ -18,7 +18,7 @@ tags:
   - hypothesis
   - search
 evidenceIds:
-  - EV-2026-001
+  - EV-VE-2026-0001
 ---
 
 ## Claim

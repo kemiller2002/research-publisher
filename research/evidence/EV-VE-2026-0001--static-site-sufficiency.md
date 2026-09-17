@@ -1,12 +1,12 @@
 ---
-id: EV-2026-001
+id: EV-VE-2026-0001
 title: Static Site Sufficiency Evidence
 artifactType: evidence
 researchArea: Visual Engineering
 discipline:
   - Web Architecture
 summary: The corpus is version-controlled, read-oriented, and buildable without a backend.
-status: active
+status: accepted
 version: "1.0"
 confidence: 0.82
 completion: 1

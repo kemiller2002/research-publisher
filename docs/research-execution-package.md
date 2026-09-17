@@ -28,12 +28,12 @@ Static publishing is sufficient now, but the design keeps data generation separa
 
 ## Evidence Registry
 
-- `EV-2026-001`
+- `EV-VE-2026-0001`
 - `EV-2026-101`
 
 ## Hypothesis Registry
 
-- `HY-2026-001`
+- `HY-VE-2026-0001`
 
 ## Failed Assumptions
 

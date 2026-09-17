@@ -9,10 +9,10 @@
       "Web Architecture"
     ],
     "evidenceIds": [
-      "EV-2026-001"
+      "EV-VE-2026-0001"
     ],
-    "id": "HY-2026-001",
-    "path": "research/hypotheses/HY-2026-001-astro-pagefind.md",
+    "id": "HY-VE-2026-0001",
+    "path": "research/hypotheses/HY-VE-2026-0001--astro-pagefind.md",
     "priority": "high",
     "researchArea": "Visual Engineering",
     "status": "active",

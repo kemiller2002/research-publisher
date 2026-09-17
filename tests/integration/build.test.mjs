@@ -55,7 +55,7 @@ describe("integration build", () => {
       path.join(workspaceRoot, "dist/research/rp-2026-002-research-publisher-findings-abstract/index.html"),
       "utf8"
     );
-    expect(abstractHtml).toContain('href="/research/ev-2026-001-static-site-sufficiency-evidence/"');
+    expect(abstractHtml).toContain('href="/research/ev-ve-2026-0001-static-site-sufficiency-evidence/"');
     expect(abstractHtml).not.toMatch(/href="[^"]*\.md(?:[?#][^"]*)?"/);
     await expect(
       fs.access(path.join(workspaceRoot, "dist/research/adding-a-research-repository/index.html"))

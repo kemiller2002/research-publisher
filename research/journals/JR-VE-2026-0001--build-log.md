@@ -1,5 +1,5 @@
 ---
-id: JR-2026-001
+id: JR-VE-2026-0001
 title: Research Publisher Build Journal
 artifactType: journal-entry
 researchArea: Visual Engineering

@@ -1,12 +1,12 @@
 ---
-id: TH-2026-001
+id: TH-VE-2026-0001
 title: Separation of Concerns Improves Research Reuse
 artifactType: theory
 researchArea: Visual Engineering
 discipline:
   - Information Architecture
 summary: Reuse improves when normalization and validation are independent from rendering.
-status: active
+status: supported
 version: "1.0"
 confidence: 0.68
 completion: 0.66
@@ -19,7 +19,7 @@ tags:
   - architecture
 relatedDocuments:
   - RP-2026-001
-  - HY-2026-001
+  - HY-VE-2026-0001
 ---
 
 ## Theory

@@ -8,14 +8,14 @@
     "discipline": [
       "Web Architecture"
     ],
-    "id": "EV-2026-001",
-    "path": "research/evidence/EV-2026-001-static-site-sufficiency.md",
+    "id": "EV-VE-2026-0001",
+    "path": "research/evidence/EV-VE-2026-0001--static-site-sufficiency.md",
     "priority": "medium",
     "relatedDocuments": [
       "RP-2026-001"
     ],
     "researchArea": "Visual Engineering",
-    "status": "active",
+    "status": "accepted",
     "summary": "The corpus is version-controlled, read-oriented, and buildable without a backend.",
     "tags": [
       "evidence",

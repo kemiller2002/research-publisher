@@ -35,16 +35,16 @@ tags:
   - practical-guidance
 relatedDocuments:
   - RP-2026-001
-  - EV-2026-001
-  - HY-2026-001
-  - TH-2026-001
+  - EV-VE-2026-0001
+  - HY-VE-2026-0001
+  - TH-VE-2026-0001
   - CN-2026-001
 evidenceIds:
-  - EV-2026-001
+  - EV-VE-2026-0001
 hypothesisIds:
-  - HY-2026-001
+  - HY-VE-2026-0001
 theoryIds:
-  - TH-2026-001
+  - TH-VE-2026-0001
 ---
 
 ## Abstract
@@ -57,7 +57,7 @@ The central practical finding is that readers and machines need different—but 
 
 ### Static publishing is sufficient for the current problem
 
-The corpus is read-oriented, version-controlled, and does not require authenticated editorial state. A static build is therefore simpler to operate and easier to preserve than a database-backed publishing application. This conclusion is supported by the [static-site sufficiency evidence](../evidence/EV-2026-001-static-site-sufficiency.md).
+The corpus is read-oriented, version-controlled, and does not require authenticated editorial state. A static build is therefore simpler to operate and easier to preserve than a database-backed publishing application. This conclusion is supported by the [static-site sufficiency evidence](../evidence/EV-VE-2026-0001--static-site-sufficiency.md).
 
 ### Search and structured data are separate products
 
@@ -65,7 +65,7 @@ Full-text search is optimized for retrieval, while a public catalog is a stable 
 
 ### Reuse depends on architectural separation
 
-Repositories can share the publisher because normalization and validation do not depend on the Astro presentation layer. A second fixture repository builds through the same engine with different content and branding. This supports the [separation-of-concerns theory](../theories/TH-2026-001-separation-of-concerns.md).
+Repositories can share the publisher because normalization and validation do not depend on the Astro presentation layer. A second fixture repository builds through the same engine with different content and branding. This supports the [separation-of-concerns theory](../theories/TH-VE-2026-0001--separation-of-concerns.md).
 
 ### Compatibility must be visible, not silent
 
@@ -90,6 +90,6 @@ The present evidence comes from a small main corpus and one fixture repository. 
 ## Reading Path
 
 1. Read the [reusable publishing system](./RP-2026-001-research-publisher.md) for the full project context.
-2. Inspect the [static-site evidence](../evidence/EV-2026-001-static-site-sufficiency.md) and [stack hypothesis](../hypotheses/HY-2026-001-astro-pagefind.md).
+2. Inspect the [static-site evidence](../evidence/EV-VE-2026-0001--static-site-sufficiency.md) and [stack hypothesis](../hypotheses/HY-VE-2026-0001--astro-pagefind.md).
 3. Review the [metadata schema](../../docs/research-metadata-schema.md) to classify additional documents.
 4. Use the generated project, purpose, and audience collections to move from synthesis into detail.
