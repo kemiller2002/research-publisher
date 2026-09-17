@@ -20,12 +20,12 @@ describe("integration build", () => {
     const guides = JSON.parse(await fs.readFile(path.join(workspaceRoot, "dist/data/research-guides.json"), "utf8"));
     expect(guides.schemaVersion).toBe("1.0");
     expect(guides.projects["research-publisher"][0]).toMatchObject({
-      id: "RP-2026-002",
+      id: "RP-VE-2026-0002",
       entryPointLabel: "Findings abstract",
       purposes: ["orient", "decide", "integrate", "apply"]
     });
     expect(guides.projects["research-publisher"][1]).toMatchObject({
-      id: "RP-2026-001",
+      id: "RP-VE-2026-0001",
       entryPointLabel: "Start here"
     });
     const projectHtml = await fs.readFile(
@@ -52,7 +52,7 @@ describe("integration build", () => {
     expect(schemaHtml).toContain('href="/research/document-purpose-and-project-guide-architecture/"');
     expect(schemaHtml).not.toMatch(/href="[^"]*\.md(?:[?#][^"]*)?"/);
     const abstractHtml = await fs.readFile(
-      path.join(workspaceRoot, "dist/research/rp-2026-002-research-publisher-findings-abstract/index.html"),
+      path.join(workspaceRoot, "dist/research/rp-ve-2026-0002-research-publisher-findings-abstract/index.html"),
       "utf8"
     );
     expect(abstractHtml).toContain('href="/research/ev-ve-2026-0001-static-site-sufficiency-evidence/"');

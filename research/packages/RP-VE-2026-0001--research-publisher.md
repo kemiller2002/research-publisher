@@ -1,5 +1,5 @@
 ---
-id: RP-2026-001
+id: RP-VE-2026-0001
 title: Reusable Research Publishing System
 artifactType: research-package
 project: research-publisher
@@ -20,7 +20,7 @@ discipline:
   - Information Architecture
   - Interface Systems
 summary: Build a reusable publishing system that turns research Markdown into a searchable static site.
-status: active
+status: accepted
 version: "1.0"
 confidence: 0.86
 completion: 0.9

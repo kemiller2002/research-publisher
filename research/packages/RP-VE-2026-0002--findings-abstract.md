@@ -1,5 +1,5 @@
 ---
-id: RP-2026-002
+id: RP-VE-2026-0002
 title: Research Publisher Findings Abstract
 artifactType: research-summary
 project: research-publisher
@@ -21,7 +21,7 @@ discipline:
   - Information Architecture
   - Web Architecture
 summary: A short synthesis of what the Research Publisher work established, why it matters, and how to use it.
-status: active
+status: accepted
 version: "1.0"
 confidence: 0.86
 completion: 1
@@ -34,7 +34,7 @@ tags:
   - publishing
   - practical-guidance
 relatedDocuments:
-  - RP-2026-001
+  - RP-VE-2026-0001
   - EV-VE-2026-0001
   - HY-VE-2026-0001
   - TH-VE-2026-0001
@@ -89,7 +89,7 @@ The present evidence comes from a small main corpus and one fixture repository. 
 
 ## Reading Path
 
-1. Read the [reusable publishing system](./RP-2026-001-research-publisher.md) for the full project context.
+1. Read the [reusable publishing system](./RP-VE-2026-0001--research-publisher.md) for the full project context.
 2. Inspect the [static-site evidence](../evidence/EV-VE-2026-0001--static-site-sufficiency.md) and [stack hypothesis](../hypotheses/HY-VE-2026-0001--astro-pagefind.md).
 3. Review the [metadata schema](../../docs/research-metadata-schema.md) to classify additional documents.
 4. Use the generated project, purpose, and audience collections to move from synthesis into detail.

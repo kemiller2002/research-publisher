@@ -18,7 +18,7 @@ tags:
   - concept
   - catalog
 relatedDocuments:
-  - RP-2026-001
+  - RP-VE-2026-0001
 ---
 
 ## Definition
