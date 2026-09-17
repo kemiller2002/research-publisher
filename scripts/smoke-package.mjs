@@ -7,15 +7,12 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import { existsSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 const repositoryRoot = process.cwd();
-
-// npm ships as npm.cmd on Windows, and spawnSync does not resolve it without a
-// shell. Naming the executable directly keeps the tarball path out of a shell.
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -29,6 +26,44 @@ function run(command, args, options = {}) {
   }
 
   return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
+}
+
+// On Windows npm is a .cmd shim, and since the CVE-2024-27980 fix Node refuses to
+// spawn .cmd/.bat without a shell. Running npm's own JS entry point under the
+// current Node avoids both the shim and a shell, so argument quoting stays exact.
+function npmEntryPoint() {
+  const fromEnvironment = process.env.npm_execpath;
+  if (fromEnvironment && fromEnvironment.endsWith(".js") && existsSync(fromEnvironment)) {
+    return fromEnvironment;
+  }
+
+  const besideNode = path.join(
+    path.dirname(process.execPath),
+    "node_modules",
+    "npm",
+    "bin",
+    "npm-cli.js"
+  );
+  if (existsSync(besideNode)) {
+    return besideNode;
+  }
+
+  return null;
+}
+
+function runNpm(args, options = {}) {
+  const entryPoint = npmEntryPoint();
+  if (entryPoint) {
+    return run(process.execPath, [entryPoint, ...args], options);
+  }
+
+  if (process.platform === "win32") {
+    throw new Error(
+      "Could not locate npm-cli.js. Run this through `npm run smoke:package` so npm_execpath is set."
+    );
+  }
+
+  return run("npm", args, options);
 }
 
 function expectExit(label, result, expected) {
@@ -82,7 +117,7 @@ async function main() {
   const npmEnv = { npm_config_cache: npmCache };
 
   console.log("Packing the package...");
-  const packed = run(npm, ["pack", "--pack-destination", packDirectory], {
+  const packed = runNpm(["pack", "--pack-destination", packDirectory], {
     cwd: repositoryRoot,
     env: npmEnv
   });
@@ -143,7 +178,7 @@ async function main() {
   console.log("Installing the tarball into a clean repository...");
   expectExit(
     "npm install <tarball>",
-    run(npm, ["install", "--prefer-offline", "--no-package-lock", tarball], { cwd: consumer, env: npmEnv }),
+    runNpm(["install", "--prefer-offline", "--no-package-lock", tarball], { cwd: consumer, env: npmEnv }),
     0
   );
 
