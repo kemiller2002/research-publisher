@@ -1,0 +1,1021 @@
+# Research Publisher vNext - Requirements Draft
+
+## 0. Purpose and Architectural Position
+
+### 0.1 Purpose
+The Research Publisher shall transform ROS-compliant research artifacts into a usable, navigable, searchable, and explainable research experience without changing the canonical research source.
+
+### 0.2 Canonical Source
+ROS Markdown artifacts remain the canonical source of truth.
+
+The publisher shall not require migration of existing ROS Markdown into a new persistence format.
+
+Any internal typed representation shall be derived from the ROS artifacts and shall not replace them as the authoritative record.
+
+### 0.3 Core Architectural Principle
+The system shall separate:
+
+- research persistence: ROS Markdown
+- domain interpretation: typed F# model
+- application/domain state: SDE
+- browser/application boundary: Limen
+- presentation: native HTML and CSS
+- publishing/deployment: generated static or static-first artifacts where practical
+
+### 0.4 Primary Goal
+The system shall improve the ability to understand, navigate, inspect, and connect research across documents.
+
+The system shall not merely convert one Markdown file into one HTML page.
+
+---
+
+# 1. Required Standards and Constraints
+
+## 1.1 ROS
+The system shall follow ROS rules and conventions.
+
+The system shall consume ROS-compliant research artifacts without requiring changes solely for presentation purposes.
+
+The system shall preserve ROS identifiers, references, evidence links, status fields, metadata, and provenance.
+
+If ROS evolves, the publisher shall support explicit version handling rather than silently assuming compatibility.
+
+## 1.2 State-Directed Engineering / Ordo
+The system shall be designed and implemented according to SDE/Ordo principles.
+
+Domain states shall be explicit.
+
+Legal transitions shall be explicit.
+
+Illegal states shall be unrepresentable where practical.
+
+State changes shall occur through defined transitions rather than arbitrary mutation.
+
+Capabilities shall expose actions that are legal in the current state.
+
+Obligations shall expose unresolved or required work.
+
+External effects shall be explicit.
+
+Version and policy checks shall occur at defined boundaries.
+
+The system shall fail clearly when required invariants are violated.
+
+## 1.3 Limen
+The browser application shall use Limen as the browser/application boundary.
+
+Limen shall own or coordinate browser-facing state transitions where appropriate.
+
+Business and research-domain logic shall not be implemented in ad hoc JavaScript.
+
+JavaScript shall remain minimal and be limited to browser interop or functions that cannot reasonably be handled through Limen/WASM.
+
+HTML and CSS shall remain native browser concerns.
+
+Routing, history, clipboard, navigation state, and browser events shall follow the established Limen patterns.
+
+## 1.4 F#
+The primary implementation shall be F# unless a technical constraint makes that impossible.
+
+Any non-F# component shall require a documented justification.
+
+Shared domain rules, parsing rules, validation rules, and publication rules should be implemented in F# where practical.
+
+## 1.5 Dependency Discipline
+External libraries shall be minimized.
+
+A library shall only be introduced when its value clearly exceeds the operational and maintenance cost.
+
+Frameworks shall not be introduced where a small direct implementation is sufficient.
+
+---
+
+# 2. Research Artifact Ingestion
+
+## 2.1 Repository Input
+The publisher shall operate over a research repository or a defined research root within a repository.
+
+It shall discover relevant ROS research artifacts according to ROS conventions.
+
+It shall not require a hand-maintained list of every source file unless ROS explicitly requires one.
+
+## 2.2 Existing Artifact Compatibility
+Existing ROS-compliant Markdown shall remain publishable without manual conversion.
+
+Legacy-but-valid ROS content shall be supported where practical.
+
+If older ROS versions require transformation, the transformation shall be deterministic, explicit, and testable.
+
+## 2.3 Parsing
+The publisher shall parse ROS Markdown into a typed internal representation.
+
+The parser shall preserve:
+
+- document identity
+- document type
+- headings
+- metadata
+- relationships
+- source references
+- evidence references
+- findings
+- open questions
+- experiments
+- theories
+- journal entries
+- decisions
+- status
+- provenance
+- timestamps where present
+- version information
+- unknown content that should not be discarded
+
+## 2.4 Unknown Sections
+Unknown or future ROS sections shall not be silently dropped.
+
+The parser shall preserve unrecognized sections and expose them as unclassified or extension content.
+
+Unknown content shall generate a warning only when appropriate rather than automatically causing publication failure.
+
+## 2.5 Parse Errors
+Parse errors shall identify:
+
+- file
+- section
+- line or location where practical
+- expected form
+- actual form
+- severity
+- whether publication can continue
+
+## 2.6 Partial Failure
+One malformed artifact shall not necessarily prevent publication of the entire site.
+
+Fatality shall be determined by explicit policy.
+
+The publication summary shall clearly identify skipped, degraded, or invalid artifacts.
+
+---
+
+# 3. Typed Research Model
+
+## 3.1 Runtime Model
+The publisher shall build a typed F# runtime representation of the research corpus.
+
+The runtime model shall represent both individual artifacts and relationships across artifacts.
+
+## 3.2 Stable Identity
+Every research object that can be referenced independently shall have a stable identifier.
+
+Identifiers shall remain consistent across publications.
+
+## 3.3 Relationships
+The model shall support explicit relationships including, where available:
+
+- supports
+- contradicts
+- derived from
+- produced by
+- references
+- supersedes
+- superseded by
+- answers
+- raises
+- validates
+- invalidates
+- relates to
+- depends on
+- evidence for
+- evidence against
+
+The implementation shall not invent relationships that are not represented in or deterministically derivable from ROS content.
+
+## 3.4 Provenance
+Every derived view shall retain a path back to the canonical artifact and, where practical, the specific section or content that produced it.
+
+## 3.5 Derived State
+Derived values shall be clearly distinguishable from source-authored values.
+
+Examples include:
+
+- inbound reference count
+- outbound reference count
+- unresolved dependency count
+- evidence coverage
+- relationship graph membership
+- publication warnings
+
+---
+
+# 4. SDE Domain States
+
+## 4.1 Publication State
+Publication shall have explicit states such as:
+
+- NotLoaded
+- Loading
+- Parsed
+- Validated
+- ReadyToPublish
+- Publishing
+- Published
+- PublishedWithWarnings
+- Failed
+
+Exact names may change, but state semantics shall be explicit.
+
+## 4.2 Artifact State
+Each artifact shall have explicit processing state such as:
+
+- Discovered
+- Parsed
+- Valid
+- ValidWithWarnings
+- Invalid
+- Excluded
+- Published
+
+## 4.3 Navigation State
+Interactive browser state shall be modeled explicitly, including:
+
+- selected artifact
+- selected research object
+- selected lens/view
+- active filters
+- search query
+- expansion state where needed
+- navigation history
+- selected relationship
+- selected source/evidence item
+
+## 4.4 Invalid State Prevention
+Examples of invalid states that should be prevented:
+
+- selecting an artifact that does not exist
+- navigating to a relationship target that cannot resolve without a defined degraded state
+- marking publication successful while fatal validation errors exist
+- generating a relationship page from unresolved internal identifiers without surfacing the issue
+- exposing actions that are not legal in the current state
+
+---
+
+# 5. Validation
+
+## 5.1 ROS Contract Validation
+The publisher shall validate ROS research artifacts before or during publication.
+
+## 5.2 Reference Validation
+Internal references shall be checked for resolvability.
+
+Broken references shall be surfaced.
+
+## 5.3 Identifier Validation
+Duplicate identifiers shall be treated as errors unless ROS explicitly permits them.
+
+## 5.4 Structural Validation
+Required sections and metadata shall be validated according to document type and ROS version.
+
+## 5.5 Semantic Validation
+Where ROS defines semantic rules, those rules shall be validated.
+
+Examples may include:
+
+- referenced evidence must exist
+- superseded items should identify their replacement where required
+- closed questions should have resolution data where required
+- experiments should expose outcome state where required
+
+## 5.6 Validation Severity
+Validation shall classify findings at minimum as:
+
+- information
+- warning
+- error
+- fatal
+
+## 5.7 Validation Output
+Validation results shall be usable both by humans and automation.
+
+A machine-readable validation artifact shall be generated.
+
+---
+
+# 6. Research Projections / Views
+
+## 6.1 Projection Model
+The publisher shall create multiple views over the same underlying research corpus.
+
+A view shall not require duplication of source content.
+
+## 6.2 Artifact View
+Each canonical ROS artifact shall have a readable representation.
+
+## 6.3 Finding View
+The system shall provide a finding-centered view that can show:
+
+- finding text
+- source artifact
+- supporting evidence
+- contradictory evidence
+- related findings
+- related experiments
+- related theories
+- downstream references
+- provenance
+
+## 6.4 Evidence View
+The system shall provide an evidence-centered view that can show:
+
+- evidence details
+- source
+- where it is referenced
+- findings it supports
+- findings it contradicts
+- experiments associated with it
+- provenance
+
+## 6.5 Source View
+The system shall provide a source-centered view when sources are represented in ROS.
+
+It shall show what claims, evidence, findings, or research objects depend upon the source.
+
+## 6.6 Experiment View
+Experiments shall be navigable as first-class research objects.
+
+Where possible, show:
+
+- hypothesis
+- method
+- result
+- linked findings
+- evidence
+- follow-up work
+- unresolved questions
+
+## 6.7 Theory View
+Theories shall be navigable as first-class research objects where present.
+
+The view should expose:
+
+- supporting findings
+- contradicting findings
+- evidence
+- experiments
+- current status
+- related theories
+
+## 6.8 Question View
+Open and resolved questions shall be first-class navigable objects where ROS provides them.
+
+## 6.9 Timeline View
+The system should provide chronological views when timestamps or journals permit them.
+
+## 6.10 Relationship View
+The system shall provide a way to inspect relationships across research objects without requiring users to open every underlying Markdown file.
+
+## 6.11 Research Health View
+The system should provide an aggregate health/integrity view containing metrics such as:
+
+- artifacts processed
+- validation warnings/errors
+- unresolved references
+- unresolved questions
+- findings without evidence where detectable
+- evidence with no consumers where relevant
+- contradictions
+- superseded items still referenced
+- relationship counts
+
+Metrics shall remain descriptive and shall not create unsupported research conclusions.
+
+---
+
+# 7. Navigation
+
+## 7.1 Research-First Navigation
+Navigation shall be oriented around research concepts and relationships rather than filesystem structure alone.
+
+## 7.2 Filesystem Access
+Users shall still be able to locate the source artifact associated with a rendered item.
+
+## 7.3 Stable URLs
+Published research objects shall have stable URLs where practical.
+
+## 7.4 Deep Linking
+Users shall be able to link directly to:
+
+- an artifact
+- finding
+- evidence item
+- experiment
+- theory
+- question
+- relevant section or object where stable identity exists
+
+## 7.5 Back/Forward Navigation
+Browser history shall work naturally through Limen.
+
+## 7.6 Breadcrumbs
+The UI shall expose enough context for users to understand where a research object originated.
+
+## 7.7 Related Items
+Relevant related objects shall be discoverable without returning to a central index.
+
+---
+
+# 8. Search and Filtering
+
+## 8.1 Full-Text Search
+The published system shall support full-text search across relevant research content.
+
+## 8.2 Structured Search
+Where fields are available, users should be able to search or filter by:
+
+- artifact type
+- status
+- topic
+- identifier
+- source
+- date
+- relationship type
+- experiment
+- finding
+- evidence
+- unresolved state
+
+## 8.3 Search Results
+Search results shall identify:
+
+- object type
+- identifier
+- title or summary
+- source artifact
+- matching context where practical
+
+## 8.4 Static Compatibility
+Search should work in the simplest practical deployment model.
+
+If a client-side index is used, its size and performance shall be monitored.
+
+A server dependency shall not be introduced solely for search unless static/client-side search becomes demonstrably insufficient.
+
+---
+
+# 9. User Interface
+
+## 9.1 Native Presentation
+Use semantic HTML and CSS.
+
+## 9.2 Accessibility
+The publisher shall target WCAG 2.2 AA where practical.
+
+Keyboard navigation shall be supported.
+
+Interactive elements shall have appropriate semantics.
+
+Color shall not be the sole method of conveying research status.
+
+## 9.3 Responsive Design
+The interface shall work across desktop, tablet, and phone layouts.
+
+## 9.4 Research Density
+The interface shall prioritize information density and research comprehension over decorative presentation.
+
+## 9.5 Progressive Disclosure
+Large relationship sets and supporting details should be collapsible or progressively disclosed.
+
+## 9.6 Source Visibility
+Users shall be able to identify the source artifact behind any important rendered research object.
+
+## 9.7 Print
+Important research views should have useful print styles.
+
+## 9.8 Copying
+Limen clipboard support shall allow copying stable links, identifiers, excerpts, or citations where appropriate.
+
+---
+
+# 10. Publishing Model
+
+## 10.1 Static-First
+The publisher shall prefer static output wherever practical.
+
+## 10.2 GitHub Pages
+The publisher shall support GitHub Pages publication.
+
+## 10.3 CI/CD
+A GitHub Actions workflow shall be provided for validation, build, and publication.
+
+## 10.4 Build Reproducibility
+The same source revision and publisher version shall produce functionally equivalent output.
+
+## 10.5 Publication Manifest
+Each publication shall create a manifest containing at minimum:
+
+- publisher version
+- ROS version(s)
+- source revision/commit
+- publication timestamp
+- artifact counts
+- validation summary
+- output version/schema
+
+## 10.6 Failed Publication
+Fatal validation or build errors shall prevent publication according to explicit policy.
+
+The last known-good published site should remain available when possible.
+
+---
+
+# 11. Incremental Publishing
+
+## 11.1 Change Detection
+The system should determine which artifacts changed between revisions.
+
+## 11.2 Dependency Awareness
+If artifact A changes and artifact B has a derived view that depends on A, B's derived projection shall be refreshed.
+
+## 11.3 Full Rebuild
+A full deterministic rebuild shall always remain possible.
+
+## 11.4 Correctness Over Optimization
+Incremental publication shall not be introduced until correctness of dependency tracking is established.
+
+---
+
+# 12. Machine-Readable Outputs
+
+## 12.1 Research Index
+The publisher shall emit a machine-readable research index.
+
+## 12.2 Relationship Index
+The publisher shall emit a machine-readable relationship index.
+
+## 12.3 Search Index
+The publisher shall emit a search index where required by the frontend.
+
+## 12.4 Validation Report
+The publisher shall emit a machine-readable validation report.
+
+## 12.5 Agent Consumption
+Outputs should be usable by agents without scraping rendered HTML.
+
+## 12.6 Contract Stability
+Machine-readable outputs shall be versioned.
+
+Breaking changes require an explicit upgrade path.
+
+---
+
+# 13. Extension Model
+
+## 13.1 New ROS Artifact Types
+The architecture shall permit adding new ROS research artifact types without redesigning the entire publisher.
+
+## 13.2 New Projections
+New views/projections shall be addable without altering canonical research artifacts.
+
+## 13.3 Extension Points
+Extension points shall be explicit rather than relying on arbitrary runtime hooks.
+
+## 13.4 Unknown Future Metadata
+Unknown metadata shall be preserved whenever safe and practical.
+
+---
+
+# 14. Security
+
+## 14.1 Static Content
+Generated content shall be treated as untrusted input during rendering.
+
+## 14.2 HTML Sanitization
+Embedded HTML or script-capable Markdown content shall not be blindly emitted.
+
+## 14.3 Script Execution
+Research artifacts shall not be able to introduce arbitrary executable JavaScript into the published site.
+
+## 14.4 Repository Credentials
+Publishing credentials shall never be emitted into generated output.
+
+## 14.5 External Links
+External links should be rendered safely and should not gain unnecessary browser privileges.
+
+---
+
+# 15. Performance
+
+## 15.1 Initial Load
+The initial published experience should not require loading the full research corpus into browser memory unless corpus size demonstrates that this is acceptable.
+
+## 15.2 Index Loading
+Search and relationship indexes should be partitionable if size grows materially.
+
+## 15.3 Navigation
+Normal research navigation should feel immediate after initial page/application load.
+
+## 15.4 Large Repositories
+The architecture shall not assume the research corpus will remain small.
+
+Performance thresholds shall be measured rather than guessed.
+
+---
+
+# 16. Observability and Diagnostics
+
+## 16.1 Build Diagnostics
+The publisher shall expose clear build diagnostics.
+
+## 16.2 Publication Metrics
+Track at minimum:
+
+- artifacts discovered
+- artifacts parsed
+- artifacts published
+- parse failures
+- validation warnings
+- validation errors
+- unresolved references
+- build duration
+- output size
+- search index size
+
+## 16.3 Structured Logging
+Logging shall follow the standard Echelon Foundry error/logging approach when available.
+
+## 16.4 Debug Output
+A diagnostic mode shall provide enough information to understand how a given source artifact became a published projection.
+
+---
+
+# 17. Testing
+
+## 17.1 Unit Testing
+Domain, parsing, validation, state transitions, and projection logic shall have thorough unit tests.
+
+## 17.2 Golden Tests
+Representative ROS documents should have deterministic expected parse/projection outputs.
+
+## 17.3 Invalid Input Tests
+Tests shall cover malformed, incomplete, contradictory, and forward-version input.
+
+## 17.4 Relationship Tests
+Relationship resolution and back-reference generation shall be tested.
+
+## 17.5 Navigation Tests
+Routing and browser state transitions shall be tested according to Limen conventions.
+
+## 17.6 Publication Tests
+The GitHub Pages output shall be testable before deployment.
+
+## 17.7 Regression Corpus
+Existing research repositories or a representative sanitized corpus should become a regression suite.
+
+A change that causes existing valid ROS research to disappear or materially mis-render shall fail the regression test.
+
+---
+
+# 18. Backward Compatibility
+
+## 18.1 Existing Research
+Existing valid research shall remain publishable.
+
+## 18.2 Existing Links
+Existing published URLs should be preserved or redirected where practical.
+
+## 18.3 Existing Publisher
+The current publisher shall remain usable until the new publisher demonstrates equivalent or better coverage of the existing corpus.
+
+## 18.4 Migration
+Migration shall focus on publisher behavior, not rewriting research artifacts.
+
+## 18.5 No Forced Conversion
+No existing Markdown artifact shall require manual conversion solely to work with the new publisher unless it is already invalid under the ROS contract.
+
+---
+
+# 19. Versioning
+
+## 19.1 Publisher Version
+The publisher shall expose its own version.
+
+## 19.2 ROS Compatibility
+Supported ROS versions shall be explicit.
+
+## 19.3 Output Schema Versions
+Machine-readable indexes and manifests shall be versioned.
+
+## 19.4 Upgrade Compatibility
+Breaking changes shall require:
+
+- documented rationale
+- compatibility analysis
+- migration path
+- tests for old and new forms
+
+---
+
+# 20. Research Integrity Principles
+
+## 20.1 No Invented Research
+The publisher shall not create findings, evidence, conclusions, or relationships that do not exist in the source research.
+
+## 20.2 Derived Presentation
+The publisher may derive navigation, indexes, counts, relationships that are deterministic from canonical data, and descriptive health diagnostics.
+
+## 20.3 Provenance
+Derived information shall remain traceable to its source.
+
+## 20.4 Contradictions
+Contradictory research shall be presented as contradictory rather than silently merged into a synthetic conclusion.
+
+## 20.5 Missing Information
+Missing evidence or unresolved references shall be represented as missing/unresolved rather than guessed.
+
+---
+
+# 21. Agent-Friendly Design
+
+## 21.1 No HTML Scraping Requirement
+Agents shall not need to scrape rendered HTML to understand the published research.
+
+## 21.2 Stable Machine Contracts
+Agents shall have versioned structured indexes for:
+
+- artifacts
+- findings
+- evidence
+- relationships
+- validation
+- source locations
+
+## 21.3 Source Retrieval
+An agent shall be able to determine the canonical source artifact for a published object.
+
+## 21.4 Bounded Context
+The system should make it possible for an agent to request or load only the research objects relevant to a task rather than consuming the entire corpus.
+
+## 21.5 Explicit Uncertainty
+Where ROS records uncertainty, status, or unresolved work, that information shall remain explicit in machine-readable outputs.
+
+---
+
+# 22. Authoring Feedback
+
+## 22.1 Publisher as Validator
+The publisher should help authors identify research quality and structural problems during normal publication.
+
+## 22.2 Actionable Errors
+Errors should explain how to correct the ROS artifact rather than merely stating that parsing failed.
+
+## 22.3 Local Validation
+The same validation engine used in CI should be runnable locally.
+
+## 22.4 CI Feedback
+Pull requests should receive validation results before publication.
+
+---
+
+# 23. Build and Developer Experience
+
+## 23.1 Simple Startup
+A repository using the publisher should require minimal setup.
+
+## 23.2 Standard Initialization
+The publisher should support the Echelon Foundry package initialization convention if applicable, such as:
+
+npx <package-name> init
+
+or an equivalent standard installer/bootstrap mechanism established for ROS/SDE/Limen tooling.
+
+The runtime implementation does not need to be Node merely because npm/npx is used as a distribution/bootstrap interface.
+
+## 23.3 Configuration
+Configuration shall be explicit, small, documented, and versionable.
+
+## 23.4 Convention Over Repetition
+ROS conventions should be discovered automatically rather than copied into large configuration files.
+
+## 23.5 Local Preview
+Developers shall be able to preview the research site locally before publishing.
+
+---
+
+# 24. Suggested Configuration
+
+The publisher should need only a small amount of configuration, potentially including:
+
+- research root
+- output directory
+- site title
+- base URL
+- ROS version policy
+- publication mode
+- optional theme/custom branding
+- feature toggles for experimental projections
+
+Configuration should not duplicate information already available in ROS artifacts.
+
+---
+
+# 25. Themes and Branding
+
+## 25.1 Separation
+Research semantics and rendering shall not depend on a particular visual theme.
+
+## 25.2 Default Theme
+The publisher shall provide a clean default theme.
+
+## 25.3 Custom Theme
+Projects may override CSS or theme tokens without forking the publisher.
+
+## 25.4 Echelon Foundry Theme
+An Echelon Foundry-branded theme may exist as a first-party option but shall not be hard-coded into core semantics.
+
+---
+
+# 26. Accessibility and Long-Term Preservation
+
+## 26.1 No JavaScript Requirement for Core Reading
+Where practical, core published research content should remain readable even if interactive WASM/Limen functionality is unavailable.
+
+## 26.2 Semantic Output
+Generated HTML shall use meaningful document structure.
+
+## 26.3 Durable Publication
+A published build should remain understandable as a static artifact independent of the build system.
+
+This preserves the research record over time.
+
+---
+
+# 27. Explicit Non-Goals
+
+The new Research Publisher shall not:
+
+- replace ROS Markdown as the canonical research format
+- require migration to a database
+- require migration to JSON
+- rewrite research content merely for display purposes
+- allow the frontend to create unsupported research conclusions
+- turn every research relationship into an opaque graph visualization
+- introduce a server architecture unless demonstrated requirements demand one
+- introduce a large JavaScript framework
+- make the published site dependent on GitHub APIs for ordinary reading
+- make research unusable outside the publisher
+- silently repair malformed research
+- hide validation problems to make publication appear successful
+
+---
+
+# 28. Initial Delivery Sequence
+
+## Phase 1 - Contract Discovery
+- inventory current publisher behavior
+- inventory current ROS research artifact types
+- identify actual Markdown structures in existing research repositories
+- define supported ROS versions
+- identify current published URL patterns
+- build regression corpus
+
+## Phase 2 - Parser and Domain Model
+- typed F# parser
+- typed research corpus
+- relationship resolution
+- validation
+- machine-readable indexes
+- comprehensive unit tests
+
+## Phase 3 - Static Publication Baseline
+- reproduce all existing publisher capabilities
+- preserve or redirect current links
+- generate readable artifact pages
+- publish through GitHub Pages
+
+## Phase 4 - Limen Research Browser
+- interactive research navigation
+- browser history/routing
+- filtering
+- search
+- related research
+- evidence/finding/source views
+- progressive disclosure
+
+## Phase 5 - Cross-Document Projections
+- relationship views
+- timeline
+- question views
+- experiment/theory projections
+- research integrity/health view
+
+## Phase 6 - Agent Interfaces
+- versioned research index
+- relationship index
+- validation output
+- bounded object retrieval
+- stable provenance references
+
+## Phase 7 - Optimization
+- incremental rebuild
+- index partitioning
+- performance tuning
+- large-corpus testing
+
+---
+
+# 29. Questions to Resolve During Requirements Analysis
+
+These should become explicit decisions rather than assumptions.
+
+1. What exact artifact types does ROS currently define for research?
+2. Which relationships are explicit in the Markdown today?
+3. Which relationships can be derived deterministically?
+4. What does the existing publisher generate today?
+5. Which current URLs must remain stable?
+6. Is publication always repository-local, or can one site aggregate multiple ROS repositories?
+7. How large are the largest current research repositories?
+8. Does ROS already have a formal schema/version marker?
+9. Should publication fail on broken internal references, or publish with warnings?
+10. Which research objects already have stable IDs?
+11. Should full-text search be entirely static/client-side initially?
+12. What current publisher capabilities are considered mandatory for feature parity?
+13. What parts of the current UI are specifically ineffective?
+14. Does research need access controls, or are published repositories assumed to be public/static?
+15. Should the publisher support private GitHub Pages or other deployment targets later?
+16. Should one research object be able to appear in multiple topical projections without duplication?
+17. Does ROS define citations separately from evidence?
+18. How are contradictory findings represented today?
+19. How are superseded findings represented today?
+20. Is a journal chronological source material, a first-class research object, or both?
+21. Do generated diagrams have canonical meaning or are they presentation-only?
+22. Should the publisher produce PDF/print exports, or should that remain a separate concern?
+23. How should attachments, images, datasets, and other non-Markdown research assets be handled?
+24. What is the expected relationship between the Research Publisher and the broader ROS tooling/package?
+25. Should publication state and validation status be written back into ROS, or remain purely derived?
+
+---
+
+# 30. Additional Requirements Worth Considering
+
+## 30.1 Cross-Repository Research
+Design identifiers so future research aggregation across multiple repositories is possible even if v1 only publishes a single repository.
+
+Do not require cross-repository support in the first implementation unless needed.
+
+## 30.2 Attachments
+Research assets such as images, CSV files, PDFs, raw experiment output, and generated artifacts shall have stable references and provenance.
+
+## 30.3 Citation-Friendly Links
+Where stable object identity exists, the publisher should make it easy to copy a durable citation/link to a specific research object.
+
+## 30.4 Diff / Evolution View
+A future projection should be able to show how a research object changed over time using repository history.
+
+This should not be required for the first release unless implementation is inexpensive.
+
+## 30.5 Evidence Dependency Inspection
+Users should be able to inspect the impact of an evidence item being invalidated or superseded.
+
+Example:
+"If EV-017 is removed, which findings or theories depend on it?"
+
+## 30.6 Research Traceability
+The architecture should allow tracing:
+
+source -> evidence -> finding -> theory/decision/question
+
+when those relationships exist in ROS.
+
+## 30.7 Bidirectional Navigation
+If A references B, the publisher should generally make both directions discoverable even when the source Markdown only encodes A -> B.
+
+The reverse relationship is a derived index, not a mutation of canonical research.
+
+## 30.8 Graceful Degradation
+Interactive Limen features shall enhance the research experience but shall not make the underlying research unreadable when unavailable.
+
+## 30.9 Deterministic Derived Data
+Any derived relationship or index shall be deterministic and reproducible from the same input revision.
+
+## 30.10 No Hidden Agent Mutation
+Agent-assisted authoring or correction, if added later, shall be a separate explicit workflow.
+
+The publisher itself shall remain a reader/interpreter/publisher and shall not silently mutate research artifacts.
+
+---
+
+# 31. Definition of Success
+
+The new publisher is successful when:
+
+- existing ROS research can be published without conversion
+- readers can understand relationships across research artifacts without manually traversing Markdown files
+- findings, evidence, experiments, theories, questions, and sources can be navigated as research objects
+- every important projection remains traceable to canonical ROS content
+- validation problems are visible and actionable
+- the UI uses Limen and follows SDE/Ordo
+- the implementation remains predominantly F#
+- static GitHub Pages deployment remains practical
+- agents can consume research through structured contracts rather than HTML scraping
+- existing research remains readable and durable outside the publisher
+- the publisher adds understanding without becoming a new source of truth
+
