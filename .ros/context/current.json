@@ -4,7 +4,7 @@
   "repository": "research-publisher",
   "actor": "claude",
   "startedAt": "2026-09-17T10:37:23.499Z",
-  "updatedAt": "2026-09-17T19:17:08Z",
+  "updatedAt": "2026-09-17T19:51:11Z",
   "baselineDirtyPaths": [],
   "workItems": [
     {
@@ -49,6 +49,27 @@
         "EXE-20260917T191438600Z-3521bddb"
       ],
       "completedAt": "2026-09-17T19:17:08Z"
+    },
+    {
+      "id": "WI-0010",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/integration/documentation-contract.test.mjs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/integration/documentation-contract.test.mjs"
+        }
+      ],
+      "updatedAt": "2026-09-17T19:51:11Z",
+      "telemetryExecutionIds": [
+        "EXE-20260917T195111846Z-1e3fde8c"
+      ],
+      "completedAt": "2026-09-17T19:51:11Z"
     }
   ]
 }

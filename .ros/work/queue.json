@@ -32,6 +32,20 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0010",
+      "title": "Give the documentation-contract CLI test a timeout proportional to its 13 subprocess spawns",
+      "description": "The test measured 4.3s idle against vitest's 5s default and failed on a loaded CI runner. Not a flake: it spawns 13 processes, five of which start the self-contained .NET binary.",
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-17T19:51:03Z",
+      "updatedAt": "2026-09-17T19:51:11Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
