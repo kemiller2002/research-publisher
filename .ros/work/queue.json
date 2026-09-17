@@ -1,6 +1,23 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "research-publisher",
-  "nextSeq": 1,
-  "items": []
+  "nextSeq": 2,
+  "items": [
+    {
+      "id": "WI-0001",
+      "title": "Install Echelon Foundry SDE 1.2.0",
+      "description": "Adds .sde/ reference material and .echelon/sde.json via npx @echelon-foundry/sde init",
+      "tags": [
+        "mechanical"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-17T10:45:02.067Z",
+      "updatedAt": "2026-09-17T10:45:06.530Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    }
+  ]
 }
