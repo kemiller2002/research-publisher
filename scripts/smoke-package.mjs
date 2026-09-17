@@ -13,6 +13,10 @@ import { spawnSync } from "node:child_process";
 
 const repositoryRoot = process.cwd();
 
+// npm ships as npm.cmd on Windows, and spawnSync does not resolve it without a
+// shell. Naming the executable directly keeps the tarball path out of a shell.
+const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     encoding: "utf8",
@@ -78,7 +82,7 @@ async function main() {
   const npmEnv = { npm_config_cache: npmCache };
 
   console.log("Packing the package...");
-  const packed = run("npm", ["pack", "--pack-destination", packDirectory], {
+  const packed = run(npm, ["pack", "--pack-destination", packDirectory], {
     cwd: repositoryRoot,
     env: npmEnv
   });
@@ -139,7 +143,7 @@ async function main() {
   console.log("Installing the tarball into a clean repository...");
   expectExit(
     "npm install <tarball>",
-    run("npm", ["install", "--prefer-offline", "--no-package-lock", tarball], { cwd: consumer, env: npmEnv }),
+    run(npm, ["install", "--prefer-offline", "--no-package-lock", tarball], { cwd: consumer, env: npmEnv }),
     0
   );
 
