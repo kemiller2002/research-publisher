@@ -1,0 +1,115 @@
+[
+  {
+    "artifactType": "research-package",
+    "audiences": [
+      "executive",
+      "practitioner",
+      "researcher",
+      "contributor"
+    ],
+    "authorAgent": "codex",
+    "completion": 0.9,
+    "confidence": 0.86,
+    "created": "2026-07-22",
+    "discipline": [
+      "Information Architecture",
+      "Interface Systems"
+    ],
+    "entryPoint": true,
+    "entryPointLabel": "Start here",
+    "entryPointOrder": 10,
+    "evidenceIds": [
+      "EV-VE-2026-0001"
+    ],
+    "hypothesisIds": [
+      "HY-VE-2026-0001"
+    ],
+    "id": "RP-VE-2026-0001",
+    "keywords": [
+      "astro",
+      "pagefind"
+    ],
+    "path": "research/packages/RP-VE-2026-0001--research-publisher.md",
+    "priority": "high",
+    "project": "research-publisher",
+    "purposes": [
+      "orient",
+      "integrate",
+      "decide"
+    ],
+    "relatedDocuments": [
+      "DF-2026-001",
+      "HY-VE-2026-0001"
+    ],
+    "researchArea": "Visual Engineering",
+    "status": "accepted",
+    "summary": "Build a reusable publishing system that turns research Markdown into a searchable static site.",
+    "tags": [
+      "publishing",
+      "static-site"
+    ],
+    "theoryIds": [
+      "TH-VE-2026-0001"
+    ],
+    "title": "Reusable Research Publishing System",
+    "updated": "2026-07-22",
+    "version": "1.0"
+  },
+  {
+    "artifactType": "research-summary",
+    "audiences": [
+      "general",
+      "executive",
+      "practitioner",
+      "contributor"
+    ],
+    "authorAgent": "codex",
+    "completion": 1,
+    "confidence": 0.86,
+    "created": "2026-08-04",
+    "discipline": [
+      "Information Architecture",
+      "Web Architecture"
+    ],
+    "entryPoint": true,
+    "entryPointLabel": "Findings abstract",
+    "entryPointOrder": 5,
+    "evidenceIds": [
+      "EV-VE-2026-0001"
+    ],
+    "hypothesisIds": [
+      "HY-VE-2026-0001"
+    ],
+    "id": "RP-VE-2026-0002",
+    "path": "research/packages/RP-VE-2026-0002--findings-abstract.md",
+    "priority": "high",
+    "project": "research-publisher",
+    "purposes": [
+      "orient",
+      "decide",
+      "integrate",
+      "apply"
+    ],
+    "relatedDocuments": [
+      "RP-VE-2026-0001",
+      "EV-VE-2026-0001",
+      "HY-VE-2026-0001",
+      "TH-VE-2026-0001",
+      "DF-VE-2026-0001"
+    ],
+    "researchArea": "Visual Engineering",
+    "status": "accepted",
+    "summary": "A short synthesis of what the Research Publisher work established, why it matters, and how to use it.",
+    "tags": [
+      "synthesis",
+      "publishing",
+      "practical-guidance"
+    ],
+    "theoryIds": [
+      "TH-VE-2026-0001"
+    ],
+    "title": "Research Publisher Findings Abstract",
+    "updated": "2026-08-04",
+    "version": "1.0"
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "artifactType": "theory",
+    "authorAgent": "codex",
+    "completion": 0.66,
+    "confidence": 0.68,
+    "created": "2026-07-22",
+    "discipline": [
+      "Information Architecture"
+    ],
+    "id": "TH-VE-2026-0001",
+    "path": "research/theories/TH-VE-2026-0001--separation-of-concerns.md",
+    "priority": "medium",
+    "relatedDocuments": [
+      "RP-VE-2026-0001",
+      "HY-VE-2026-0001"
+    ],
+    "researchArea": "Visual Engineering",
+    "status": "supported",
+    "summary": "Reuse improves when normalization and validation are independent from rendering.",
+    "tags": [
+      "theory",
+      "architecture"
+    ],
+    "title": "Separation of Concerns Improves Research Reuse",
+    "updated": "2026-07-22",
+    "version": "1.0"
+  }
+]

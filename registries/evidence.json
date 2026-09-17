@@ -1,0 +1,28 @@
+[
+  {
+    "artifactType": "evidence",
+    "authorAgent": "codex",
+    "completion": 1,
+    "confidence": 0.82,
+    "created": "2026-07-22",
+    "discipline": [
+      "Web Architecture"
+    ],
+    "id": "EV-VE-2026-0001",
+    "path": "research/evidence/EV-VE-2026-0001--static-site-sufficiency.md",
+    "priority": "medium",
+    "relatedDocuments": [
+      "RP-VE-2026-0001"
+    ],
+    "researchArea": "Visual Engineering",
+    "status": "accepted",
+    "summary": "The corpus is version-controlled, read-oriented, and buildable without a backend.",
+    "tags": [
+      "evidence",
+      "architecture"
+    ],
+    "title": "Static Site Sufficiency Evidence",
+    "updated": "2026-07-22",
+    "version": "1.0"
+  }
+]

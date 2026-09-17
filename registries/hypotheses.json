@@ -1,0 +1,28 @@
+[
+  {
+    "artifactType": "hypothesis",
+    "authorAgent": "codex",
+    "completion": 0.8,
+    "confidence": 0.74,
+    "created": "2026-07-22",
+    "discipline": [
+      "Web Architecture"
+    ],
+    "evidenceIds": [
+      "EV-VE-2026-0001"
+    ],
+    "id": "HY-VE-2026-0001",
+    "path": "research/hypotheses/HY-VE-2026-0001--astro-pagefind.md",
+    "priority": "high",
+    "researchArea": "Visual Engineering",
+    "status": "active",
+    "summary": "Astro and Pagefind provide the best balance of reusability, static output, and search for version 1.",
+    "tags": [
+      "hypothesis",
+      "search"
+    ],
+    "title": "Astro Plus Pagefind Is the Best Initial Stack",
+    "updated": "2026-07-22",
+    "version": "1.0"
+  }
+]
