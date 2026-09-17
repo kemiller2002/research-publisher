@@ -57,13 +57,17 @@ describe("documentation and CLI agree", () => {
     }
   });
 
+  // Spawns the CLI once per command -- 13 processes, five of which start the
+  // self-contained .NET binary. That measures ~4.3s on an idle machine, so
+  // vitest's 5s default leaves no headroom and the test fails on a loaded CI
+  // runner rather than because anything is wrong.
   it("every command in help has command-specific help", () => {
     for (const command of [...LIFECYCLE_COMMANDS, ...ENGINE_COMMANDS]) {
       const result = run(command, "--help");
       expect(result.status, `${command} --help should succeed`).toBe(0);
       expect(result.stdout).toContain(command);
     }
-  });
+  }, 60_000);
 
   it("the exit codes in help, the README and the command reference match", () => {
     const documented = [

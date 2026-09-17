@@ -1,7 +1,7 @@
 {
   "name": "research-publisher",
   "project": "Research Publisher",
-  "rosVersion": "1.2.1",
+  "rosVersion": "3.0.3",
   "repSpecificationVersion": "2.0",
   "profile": "greenfield",
   "bootstrap": "BOOTSTRAP.md",
