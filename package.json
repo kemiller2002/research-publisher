@@ -1,7 +1,7 @@
 {
   "name": "@echelon-foundry/research-publisher",
   "version": "0.1.0",
-  "description": "Publish structured research documents as a searchable static website.",
+  "description": "Echelon Foundry research publishing capability: repository initialization, verification, diagnostics and upgrade tooling, plus the Markdown-to-static-site publishing engine it installs.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kemiller2002/research-publisher.git"
@@ -11,31 +11,49 @@
     "url": "https://github.com/kemiller2002/research-publisher/issues"
   },
   "keywords": [
+    "echelon-foundry",
     "research",
     "publishing",
     "markdown",
     "astro",
-    "static-site"
+    "static-site",
+    "cli",
+    "repository-tooling",
+    "initialization",
+    "verification",
+    "migration"
   ],
   "publishConfig": {
     "access": "public"
   },
   "type": "module",
   "bin": {
-    "research-publisher": "src/cli/index.mjs"
+    "research-publisher": "bin/research-publisher.js"
   },
   "exports": {
     ".": "./src/index.mjs"
   },
   "files": [
-    "src",
+    "bin",
+    "runtimes",
+    "src/index.mjs",
+    "src/build",
+    "src/cli",
+    "src/content",
+    "src/metadata",
+    "src/relationships",
+    "src/validation",
     "site/src",
     "site/astro.config.mjs",
     "site/package.json",
+    "prompts/mark-research-documents.md",
+    "docs/cli.md",
+    "docs/installation.md",
+    "docs/upgrading.md",
     "docs/document-purpose-taxonomy.md",
     "docs/research-metadata-schema.md",
     "docs/theming.md",
-    "prompts/mark-research-documents.md",
+    "docs/troubleshooting-research-builds.md",
     "README.md"
   ],
   "engines": {
@@ -44,18 +62,27 @@
   "scripts": {
     "dev": "npm run research:dev",
     "build": "npm run research:build",
-    "test": "npm run research:test",
+    "test": "npm run lifecycle:test && npm run research:test",
+    "pretest": "npm run lifecycle:build -- --if-missing",
+    "lifecycle:restore": "dotnet restore ResearchPublisher.Lifecycle.sln",
+    "lifecycle:build": "node ./scripts/build-lifecycle.mjs",
+    "lifecycle:build:all": "node ./scripts/build-lifecycle.mjs --all",
+    "lifecycle:test": "dotnet test ResearchPublisher.Lifecycle.sln --nologo",
     "research:dev": "node ./src/cli/index.mjs dev --config ./research-publisher.config.mjs",
     "research:build": "node ./src/cli/index.mjs build --config ./research-publisher.config.mjs",
     "research:validate": "node ./src/cli/index.mjs validate --config ./research-publisher.config.mjs",
     "research:test": "vitest run",
     "research:clean": "node ./src/cli/index.mjs clean --config ./research-publisher.config.mjs",
+    "research:status": "node ./bin/research-publisher.js status",
+    "research:verify": "node ./bin/research-publisher.js verify",
+    "research:doctor": "node ./bin/research-publisher.js doctor",
     "research:inventory": "node ./src/cli/index.mjs inventory --config ./research-publisher.config.mjs",
     "research:check-links": "node ./src/cli/index.mjs check-links --config ./research-publisher.config.mjs",
     "research:preview": "node ./src/cli/index.mjs preview --config ./research-publisher.config.mjs",
     "research:migrate": "node ./src/cli/index.mjs migrate --config ./research-publisher.config.mjs",
     "research:build:fixture": "node ./src/cli/index.mjs build --config ./fixtures/alt-research/research-publisher.config.mjs",
-    "smoke:consumer": "node ./scripts/smoke-consumer.mjs"
+    "smoke:consumer": "node ./scripts/smoke-consumer.mjs",
+    "smoke:package": "node ./scripts/smoke-package.mjs"
   },
   "dependencies": {
     "astro": "^5.12.8",

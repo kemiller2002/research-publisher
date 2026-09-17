@@ -1,5 +1,13 @@
 # Autonomous Engineering Prompt: Reusable Research Publishing System
 
+> **Historical.** This is the original engineering brief that produced the
+> package. It is kept for provenance and does not describe how to install or
+> operate the tool today. For that, see the
+> [README](../README.md), [docs/installation.md](../docs/installation.md) and
+> [docs/cli.md](../docs/cli.md).
+
+---
+
 **Purpose:** Give this prompt to Codex or another autonomous engineering agent to design and implement a reusable Markdown-to-web publishing system for Visual Engineering and future research frameworks.
 
 ---

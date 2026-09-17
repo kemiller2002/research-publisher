@@ -1,5 +1,8 @@
 # Research Publishing Workflow
 
+This page describes the publishing pipeline. For installing, verifying and
+upgrading the capability itself, see [the command reference](./cli.md).
+
 ## Local Commands
 
 - `npm ci`
@@ -8,6 +11,14 @@
 - `npm run research:build`
 - `npm run research:build:fixture`
 - `npm test`
+
+In a consumer repository the same stages run through the package executable:
+
+```bash
+npx @echelon-foundry/research-publisher inventory --config ./research-publisher.config.mjs
+npx @echelon-foundry/research-publisher validate --config ./research-publisher.config.mjs
+npx @echelon-foundry/research-publisher build --config ./research-publisher.config.mjs
+```
 
 ## Build Stages
 
@@ -22,5 +33,5 @@
 
 ## Deployment
 
-The GitHub workflows keep application logic in npm scripts. Validation runs on pull requests and pushes, while publishing deploys the built static site to GitHub Pages.
+The GitHub workflows keep application logic in npm scripts. `Validate Research` runs the lifecycle and publishing checks on pull requests and pushes, `Lifecycle CLI` packs the npm archive and exercises it on Linux, Windows and macOS, `Publish Research` deploys the built static site to GitHub Pages, and `Publish npm Package` releases the package.
 

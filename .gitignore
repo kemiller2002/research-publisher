@@ -8,3 +8,12 @@ build-reports/
 fixtures/alt-research/dist/
 *.tgz
 .tmp/
+
+# .NET build output for the F# lifecycle CLI
+**/obj/
+src/**/bin/
+tests/**/bin/
+TestResults/
+
+# Platform executables staged into the npm package by scripts/build-lifecycle.mjs
+/runtimes/

@@ -1,5 +1,26 @@
 # Autonomous Prompt: Install `research-publisher` On An Existing Repository
 
+> **Canonical interface first.** This package now installs and upgrades itself.
+> Before following any manual procedure below, run:
+>
+> ```bash
+> npm install -D @echelon-foundry/research-publisher
+> npx @echelon-foundry/research-publisher init
+> npx @echelon-foundry/research-publisher verify
+> ```
+>
+> `init` creates the configuration, installs the shared document-marking prompt,
+> registers the `research:*` npm scripts and writes `.echelon/research-publisher.json`.
+> It is idempotent and never overwrites a file the repository owns. See
+> [docs/installation.md](../docs/installation.md) and [docs/cli.md](../docs/cli.md).
+>
+> The rest of this prompt is the repository-specific judgement the CLI cannot make
+> for you: finding where Markdown actually lives, deciding what is publishable,
+> tuning the content globs and setting up deployment. Where a step below describes
+> creating the config, the prompt file or the npm scripts by hand, prefer `init`.
+
+---
+
 **Purpose:** Give this prompt to Codex or another autonomous engineering agent to inspect an existing repository, install `research-publisher`, discover the real Markdown corpus, and configure a maintainable static research publishing workflow without requiring constant folder-path updates.
 
 ---

@@ -90,10 +90,16 @@ Reconsider this model if multi-project co-ownership becomes common, if audience-
 
 ## Installation
 
-Consumer repositories can install the reusable classification prompt with:
+`init` installs the reusable classification prompt along with everything else the
+capability needs:
 
 ```bash
-research-publisher install-prompt --config ./research-publisher.config.mjs
+npx @echelon-foundry/research-publisher init
 ```
 
-The command creates `prompts/research-publisher-mark-documents.md` and will not overwrite an existing copy.
+It creates `prompts/research-publisher-mark-documents.md` and never overwrites an
+existing copy. The file is *shared*: edit it freely, and upgrades will leave your
+version alone and report the divergence instead.
+
+The older `install-prompt` command still works and installs only the prompt. It
+is retained for compatibility; prefer `init`.
