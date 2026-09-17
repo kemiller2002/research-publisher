@@ -46,6 +46,20 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0011",
+      "title": "Re-run the vNext gap analysis against the requirements draft that landed mid-discovery",
+      "description": "input-documents/research-publisher-vnext-requirements.txt (550b1b9) was committed after the discovery search ran. Deliverable E rewritten against it, its section 29 answered, deliverable O repositioned as a v0.2.0 revision.",
+      "tags": [],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-17T19:55:26Z",
+      "updatedAt": "2026-09-17T19:55:26Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

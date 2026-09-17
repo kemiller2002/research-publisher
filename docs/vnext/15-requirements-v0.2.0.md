@@ -1,34 +1,47 @@
 ---
 id: REQ-RP-VNEXT
 title: Research Publisher vNext Requirements
-version: 0.1.0
+version: 0.2.0
 status: draft
 created: 2026-09-17
-supersedes: []
+updated: 2026-09-17
+supersedes: input-documents/research-publisher-vnext-requirements.txt (unversioned draft, 550b1b9)
 ---
 
-# Research Publisher vNext — Requirements v0.1.0
+# Research Publisher vNext — Requirements v0.2.0
 
 ## Change summary
 
-**This is an original document, not a revision.** No prior requirements file
-exists in `research-publisher`, `repository-operating-system` or
-`visual-engineering` (see `05-requirements-gap-analysis.md` §E.0 for the search
-performed). Nothing was overwritten.
+This **revises** the draft at
+`input-documents/research-publisher-vnext-requirements.txt` (1,021 lines, 31
+sections, commit `550b1b9`). **That file is unmodified.** This is a separate,
+versioned document, per the instruction not to overwrite the prior requirements.
 
-It is derived from measured evidence in this discovery, and from the implicit
-requirements encoded in `docs/research-publisher-architecture.md`, whose seven
-hypotheses were tested in E.1.
+The prior draft arrived after discovery had run (see
+`00-discovery-summary.md`), so the evidence below was gathered independently of
+it. Full classification of all 31 sections is in
+`05-requirements-gap-analysis.md`; answers to its §29 questions are in
+`17-requirements-section-29-answers.md`.
 
-| vs. the implicit requirements | Change |
-| --- | --- |
-| Astro rendering | **Removed** — replaced by F# projection + Limen (§1.5, §1.6) |
-| Pagefind search | **Replaced** — index built from the typed model (ADR 0008) |
-| camelCase front matter | **Corrected** — snake_case is the corpus majority |
-| `status` as vocabulary | **Corrected** — free text with derived classification |
-| Relationships as ID lists | **Corrected** — heterogeneous union of 5 value kinds |
-| Defaulting absent metadata | **Forbidden** (ADR 0010) |
-| — | **Added:** relationship-recall target, integrity surfacing, bounded agent retrieval, URL stability guarantee, two-population awareness, determinism |
+### What changed from the prior draft
+
+| Area | Change | Why |
+| --- | --- | --- |
+| §3.3 relationship vocabulary (15 relations) | **Removed as a requirement; retained as a target vocabulary for ROS authoring** | Zero of the 15 appear in the corpus. What exists is `related_documents` (untyped), `source_rep`, `supersedes`/`superseded_by` (null in all 8 uses), `originates`, `prerequisite` |
+| §6.3 Finding View, §6.4 Evidence View, §30.5, §30.6 | **Deferred, blocked on a ROS authoring decision** | No sub-document research object carries an identity. Building them requires inventing IDs, which §3.3, §20.1 and §28 forbid |
+| §6.9 Timeline View | **Deferred** | 735 of 756 records carry a fabricated `created` date |
+| §3.2 stable identity | **Refined** — defines behaviour when identity is absent | 68 of 117 authored documents have no `id` |
+| §7.3 stable URLs | **Strengthened** from "where practical" to a hard prohibition on title-derived URLs | 58% of current URLs are title-derived and already unstable |
+| §15.1 initial load | **Re-diagnosed** | The 6.3 MB catalog is large because it inlines 4.0 MB of HTML, not because 756 documents is many |
+| §2.1 ROS-convention discovery | **Refined** to config-driven with ROS as cross-check | The VE corpus lives outside the canonical roots declared in `ros.json` |
+| — | **Added:** no-fabricated-data rule, relationship-recall target, dangling-reference visibility, frontier-pipeline consumption, two-population awareness, snake_case parsing, determinism | None appear in the prior draft; each addresses a measured defect |
+
+### Carried forward unchanged
+
+Every architectural constraint: ROS Markdown canonical, no forced migration,
+SDE/Ordo, Limen, F# core, dependency discipline, static-first GitHub Pages,
+integrity principles (§20), agent-friendly contracts (§21), graceful
+degradation (§30.8), determinism (§30.9), no hidden mutation (§30.10).
 
 ---
 

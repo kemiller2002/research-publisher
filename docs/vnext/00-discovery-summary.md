@@ -29,33 +29,26 @@ a presentation defect.
 
 ---
 
-## Missing input: there is no vNext requirements draft
+## The vNext requirements draft arrived mid-discovery
 
-**OBSERVED:** The task statement says a requirements draft "should already
-exist". It does not, in any repository reachable from this session.
+**OBSERVED:** when discovery began, no requirements draft existed in any
+reachable repository. I searched `research-publisher`,
+`repository-operating-system` and `visual-engineering` — every `*.md`, any
+filename matching `*requirement*`, and content matching `vnext` / `v-next` /
+`next generation` / `redesign` near `research publisher`. Zero matches, at
+~19:40 UTC.
 
-Searched: `research-publisher`, `repository-operating-system`,
-`visual-engineering` — every `*.md`, plus any file whose name matches
-`*requirement*`, plus case-insensitive content search for `vnext`, `v-next`,
-`next generation`, `redesign` co-occurring with `research publisher`. Zero
-matches. (The only `vnext` hits anywhere were byte sequences inside
-`System.Private.Xml.dll` build outputs.)
+`input-documents/research-publisher-vnext-requirements.txt` (1,021 lines, 31
+sections) was committed at 19:49 UTC as `550b1b9`, after that search.
 
-Consequence for the deliverables:
+This sequencing is worth stating plainly: **the evidence in these documents was
+gathered independently of the requirements.** Where the two agree, it is
+convergence rather than confirmation bias; where they conflict, the conflict was
+not manufactured to fit a conclusion.
 
-- §11 (Requirements Gap Analysis) cannot classify pre-existing requirements as
-  CONFIRMED / CONTRADICTED, because there are none to classify. It is instead
-  delivered as an analysis of the **implicit** requirements encoded in the
-  current implementation and its architecture document.
-- §26.O ("do not silently overwrite the prior requirements file") is satisfied
-  trivially: the new requirements are an original document, marked v0.1.0, and
-  nothing was overwritten.
-
-**OPEN QUESTION:** If a requirements draft exists outside these three
-repositories (a private repo, an issue, a document store), it was not reachable
-and should be supplied before the requirements deliverable is treated as final.
-
----
+Deliverable E was rewritten against the real document once it arrived, and
+deliverable O is now a revision of it rather than an original. Nothing in
+`input-documents/` was modified.
 
 ## What was actually inspected
 
@@ -93,6 +86,7 @@ actually produced, not a re-run under different conditions.
 | L | Regression Test Plan | `12-regression-test-plan.md` |
 | M | First Vertical Slice Plan | `13-vertical-slice.md` |
 | N | Risk Register | `14-risk-register.md` |
-| O | Updated Requirements (v0.1.0, original) | `15-requirements-v0.1.0.md` |
+| O | Updated Requirements (v0.2.0, revises the prior draft) | `15-requirements-v0.2.0.md` |
 | — | ADRs | `adr/` |
-| — | Final Analysis (§29) | `16-final-analysis.md` |
+| — | Final Analysis (task §29) | `16-final-analysis.md` |
+| — | Answers to the requirements draft's §29 | `17-requirements-section-29-answers.md` |

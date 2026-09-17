@@ -4,7 +4,7 @@
   "repository": "research-publisher",
   "actor": "claude",
   "startedAt": "2026-09-17T10:37:23.499Z",
-  "updatedAt": "2026-09-17T19:46:35Z",
+  "updatedAt": "2026-09-17T19:55:26Z",
   "baselineDirtyPaths": [],
   "workItems": [
     {
@@ -59,6 +59,17 @@
       "updatedAt": "2026-09-17T19:46:35Z",
       "telemetryExecutionIds": [
         "EXE-20260917T194636461Z-61808dbf"
+      ]
+    },
+    {
+      "id": "WI-0011",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-09-17T19:55:26Z",
+      "telemetryExecutionIds": [
+        "EXE-20260917T195527658Z-f08a7190"
       ]
     }
   ]
