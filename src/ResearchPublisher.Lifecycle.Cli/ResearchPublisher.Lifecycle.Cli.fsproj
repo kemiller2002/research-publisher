@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>research-publisher-lifecycle</AssemblyName>
+    <RootNamespace>ResearchPublisher.Lifecycle.Cli</RootNamespace>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <GenerateDependencyFile>true</GenerateDependencyFile>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Args.fs" />
+    <Compile Include="Help.fs" />
+    <Compile Include="JsonOutput.fs" />
+    <Compile Include="HumanOutput.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../ResearchPublisher.Lifecycle.Core/ResearchPublisher.Lifecycle.Core.fsproj" />
+  </ItemGroup>
+
+</Project>

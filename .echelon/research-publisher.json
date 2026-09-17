@@ -1,0 +1,70 @@
+{
+  "schema": "echelon.tool-installation/1",
+  "tool": "research-publisher",
+  "package": "@echelon-foundry/research-publisher",
+  "installedVersion": "0.1.0",
+  "configurationVersion": 2,
+  "managedArtifacts": [
+    {
+      "id": "config",
+      "path": "research-publisher.config.mjs",
+      "ownership": "user-owned"
+    },
+    {
+      "id": "marking-prompt",
+      "path": "prompts/research-publisher-mark-documents.md",
+      "ownership": "shared",
+      "hash": "sha256:dfae3a52216683c3bae0857c4f3167bd3e56943bda255a808bbd363babe854ce"
+    },
+    {
+      "id": "manifest",
+      "path": ".echelon/research-publisher.json",
+      "ownership": "tool-owned"
+    },
+    {
+      "id": "site-output",
+      "path": "dist",
+      "ownership": "generated"
+    },
+    {
+      "id": "engine-cache",
+      "path": ".research-publisher",
+      "ownership": "generated"
+    },
+    {
+      "id": "build-reports",
+      "path": "build-reports",
+      "ownership": "generated"
+    }
+  ],
+  "managedScripts": [
+    {
+      "name": "research:inventory",
+      "command": "node ./src/cli/index.mjs inventory --config ./research-publisher.config.mjs"
+    },
+    {
+      "name": "research:validate",
+      "command": "node ./src/cli/index.mjs validate --config ./research-publisher.config.mjs"
+    },
+    {
+      "name": "research:build",
+      "command": "node ./src/cli/index.mjs build --config ./research-publisher.config.mjs"
+    },
+    {
+      "name": "research:clean",
+      "command": "node ./src/cli/index.mjs clean --config ./research-publisher.config.mjs"
+    },
+    {
+      "name": "research:status",
+      "command": "node ./bin/research-publisher.js status"
+    },
+    {
+      "name": "research:verify",
+      "command": "node ./bin/research-publisher.js verify"
+    },
+    {
+      "name": "research:doctor",
+      "command": "node ./bin/research-publisher.js doctor"
+    }
+  ]
+}

@@ -3,8 +3,7 @@ import path from "node:path";
 import { loadConfig } from "../build/config.mjs";
 import { buildProject } from "../build/project.mjs";
 import { inventoryProject } from "../content/inventory.mjs";
-import { initializeProject } from "./init-project.mjs";
-import { installMarkingPrompt } from "./install-prompt.mjs";
+import { LIFECYCLE_COMMANDS, delegate } from "./lifecycle.mjs";
 
 function parseArgs(argv) {
   const result = {
@@ -24,17 +23,11 @@ function parseArgs(argv) {
 
 export async function runCommand(argv = process.argv) {
   const { command, configPath } = parseArgs(argv);
-  if (command === "init") {
-    const result = await initializeProject(process.cwd());
-    process.stdout.write([
-      result.configCreated ? `Created ${result.configPath}.` : `Kept existing ${result.configPath}.`,
-      result.promptCreated ? `Created ${result.promptPath}.` : `Kept existing ${result.promptPath}.`,
-      result.scriptsAdded.length > 0
-        ? `Added package scripts: ${result.scriptsAdded.join(", ")}.`
-        : "Required package scripts already exist.",
-      "Next: review research-publisher.config.mjs, then run npm run research:inventory and npm run research:build.",
-      ""
-    ].join("\n"));
+
+  // Lifecycle commands are owned by the F# CLI. Nothing here decides what an
+  // installation is, only which program handles the request.
+  if (LIFECYCLE_COMMANDS.has(command)) {
+    process.exitCode = delegate(argv.slice(2));
     return;
   }
 
@@ -42,14 +35,6 @@ export async function runCommand(argv = process.argv) {
 
   if (command === "inventory") {
     await inventoryProject({ projectRoot, config });
-    return;
-  }
-
-  if (command === "install-prompt") {
-    const result = await installMarkingPrompt(projectRoot);
-    process.stdout.write(result.created
-      ? `Installed document-marking prompt at ${result.path}.\n`
-      : `Prompt already exists at ${result.path}; left it unchanged.\n`);
     return;
   }
 

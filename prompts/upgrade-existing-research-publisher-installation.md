@@ -1,5 +1,27 @@
 # Autonomous Prompt: Upgrade An Existing `research-publisher` Installation
 
+> **Canonical interface first.** This package now upgrades itself through
+> sequential migrations. Before following any manual procedure below, run:
+>
+> ```bash
+> npm install -D @echelon-foundry/research-publisher@latest
+> npx @echelon-foundry/research-publisher upgrade --dry-run
+> npx @echelon-foundry/research-publisher upgrade
+> npx @echelon-foundry/research-publisher verify
+> ```
+>
+> `upgrade` detects an installation made before `.echelon/` manifests existed,
+> adopts it and migrates it forward without changing anything the repository owns.
+> If a precondition fails it writes nothing and exits `5`. Use
+> `npx @echelon-foundry/research-publisher doctor` when something is wrong. See
+> [docs/upgrading.md](../docs/upgrading.md).
+>
+> The rest of this prompt is the repository-specific judgement the CLI cannot make
+> for you: content-glob drift, deployment workflows and corpus classification.
+> Where a step below describes editing managed files by hand, prefer `upgrade`.
+
+---
+
 **Purpose:** Give this prompt to Codex or another autonomous engineering agent to upgrade a repository that already uses `research-publisher`, refresh its configuration and GitHub Actions if needed, and verify that the upgraded install still builds correctly.
 
 ---

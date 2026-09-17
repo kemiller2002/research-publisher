@@ -1,145 +1,46 @@
-import fs from "node:fs/promises";
+// Compatibility wrapper.
+//
+// `init` is implemented in the F# lifecycle core. This module keeps the original
+// JavaScript entry point working for anything that imported it directly, and
+// translates the CLI's JSON result into the shape it used to return.
+
 import path from "node:path";
-import { installMarkingPrompt } from "./install-prompt.mjs";
+import { delegateJson } from "./lifecycle.mjs";
 
-const requiredScripts = {
-  "research:inventory": "research-publisher inventory --config ./research-publisher.config.mjs",
-  "research:validate": "research-publisher validate --config ./research-publisher.config.mjs",
-  "research:build": "research-publisher build --config ./research-publisher.config.mjs",
-  "research:clean": "research-publisher clean --config ./research-publisher.config.mjs"
-};
+const CONFIG_PATH = "research-publisher.config.mjs";
+const PROMPT_PATH = "prompts/research-publisher-mark-documents.md";
+const SCRIPT_PREFIX = "package.json#scripts.";
 
-function titleFromName(name) {
-  return String(name || "Research Repository")
-    .replace(/^@[^/]+\//, "")
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+function createdPaths(report) {
+  return (report.applied ?? [])
+    .filter((change) => change.kind === "create-file" && change.outcome === "applied")
+    .map((change) => change.target);
 }
 
-function repositoryUrl(packageJson) {
-  if (typeof packageJson.repository === "string") {
-    return packageJson.repository.replace(/^git\+/, "").replace(/\.git$/, "");
-  }
-  if (packageJson.repository?.url) {
-    return packageJson.repository.url.replace(/^git\+/, "").replace(/\.git$/, "");
-  }
-  return "";
+function addedScripts(report) {
+  return (report.applied ?? [])
+    .filter((change) => change.kind === "add-package-script" && change.outcome === "applied")
+    .map((change) => change.target.slice(SCRIPT_PREFIX.length));
 }
 
-function configSource(packageJson, projectRoot) {
-  const name = packageJson.name || path.basename(projectRoot);
-  const title = titleFromName(name);
-  const sourceUrl = repositoryUrl(packageJson);
-  return `export default {
-  site: {
-    title: ${JSON.stringify(title)},
-    description: "Searchable research repository",
-    // Use "/repository-name/" for a GitHub Pages project site.
-    baseUrl: "/",
-    language: "en",
-    siteUrl: "https://example.com/"
-  },
-  repository: {
-    name: ${JSON.stringify(name)},
-    sourceUrl: ${JSON.stringify(sourceUrl)}
-  },
-  content: {
-    // Broad discovery keeps future research folders visible without config churn.
-    include: ["**/*.md"],
-    exclude: [
-      "README.md",
-      "CHANGELOG.md",
-      "CONTRIBUTING.md",
-      "node_modules/**",
-      "dist/**",
-      ".git/**",
-      ".github/**",
-      ".research-publisher/**",
-      "build-reports/**",
-      "prompts/**",
-      "coverage/**",
-      "tmp/**",
-      "temp/**",
-      "**/archive/**",
-      "**/archives/**"
-    ],
-    drafts: false
-  },
-  metadata: {
-    mode: "compatible",
-    strictInCI: true,
-    required: ["title"],
-    stableIdPrefixes: ["RP", "JR", "EV", "HY", "TH", "EX", "DF", "CN", "GL"]
-  },
-  output: {
-    directory: "dist",
-    catalog: "data/research-catalog.json",
-    diagnostics: "data/build-diagnostics.json"
-  },
-  branding: {
-    // Package defaults provide a unified design. Override only the semantic
-    // color roles this repository needs; see the Research Publisher README.
-    cssVariables: {
-      // "--color-accent": "#2457a6",
-      // "--color-accent-strong": "#173b73",
-      // "--color-accent-soft": "#dce8fa"
-    }
-  }
-};
-`;
-}
-
-async function writeExclusive(filePath, contents) {
-  try {
-    await fs.writeFile(filePath, contents, { flag: "wx" });
-    return true;
-  } catch (error) {
-    if (error.code === "EEXIST") {
-      return false;
-    }
-    throw error;
-  }
+function preservedScripts(report) {
+  return (report.skipped ?? [])
+    .filter((entry) => entry.target.startsWith(SCRIPT_PREFIX))
+    .map((entry) => entry.target.slice(SCRIPT_PREFIX.length));
 }
 
 export async function initializeProject(projectRoot = process.cwd()) {
-  const packagePath = path.join(projectRoot, "package.json");
-  let packageJson;
-  try {
-    packageJson = JSON.parse(await fs.readFile(packagePath, "utf8"));
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      throw new Error("package.json is required. Run npm init -y before research-publisher init.");
-    }
-    throw error;
-  }
-
-  const scriptsAdded = [];
-  const scriptsPreserved = [];
-  packageJson.scripts ??= {};
-  for (const [name, command] of Object.entries(requiredScripts)) {
-    if (Object.hasOwn(packageJson.scripts, name)) {
-      scriptsPreserved.push(name);
-    } else {
-      packageJson.scripts[name] = command;
-      scriptsAdded.push(name);
-    }
-  }
-  if (scriptsAdded.length > 0) {
-    await fs.writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
-  }
-
-  const configPath = path.join(projectRoot, "research-publisher.config.mjs");
-  const configCreated = await writeExclusive(configPath, configSource(packageJson, projectRoot));
-  const prompt = await installMarkingPrompt(projectRoot);
+  const report = delegateJson(["init", "--repo", projectRoot]);
+  const created = createdPaths(report);
 
   return {
     projectRoot,
-    packagePath,
-    configPath,
-    configCreated,
-    promptPath: prompt.path,
-    promptCreated: prompt.created,
-    scriptsAdded,
-    scriptsPreserved
+    packagePath: path.join(projectRoot, "package.json"),
+    configPath: path.join(projectRoot, CONFIG_PATH),
+    configCreated: created.includes(CONFIG_PATH),
+    promptPath: path.join(projectRoot, PROMPT_PATH),
+    promptCreated: created.includes(PROMPT_PATH),
+    scriptsAdded: addedScripts(report),
+    scriptsPreserved: preservedScripts(report)
   };
 }

@@ -30,7 +30,10 @@ describe("initializeProject", () => {
     expect(first.scriptsAdded).toEqual([
       "research:inventory",
       "research:validate",
-      "research:clean"
+      "research:clean",
+      "research:status",
+      "research:verify",
+      "research:doctor"
     ]);
     expect(first.scriptsPreserved).toEqual(["research:build"]);
 

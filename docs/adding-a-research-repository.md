@@ -1,12 +1,21 @@
 # Adding A Research Repository
 
+The canonical setup is [Installation](./installation.md). This page covers the
+repository-layout decisions that sit around it.
+
 ## Five-Minute Setup
 
-1. Install the `research-publisher` package into the repository.
-2. Add a `research-publisher.config.mjs` file with site, content, output, and branding settings.
-3. Point `content.include` at the repository's Markdown corpus.
-4. Run `npm ci`.
-5. Run `npm run research:build`.
+```bash
+npm install -D @echelon-foundry/research-publisher
+npx @echelon-foundry/research-publisher init
+npx @echelon-foundry/research-publisher verify
+npm run research:build
+```
+
+`init` creates `research-publisher.config.mjs`, installs the shared
+document-marking prompt, registers the `research:*` npm scripts and writes the
+installation manifest. Afterwards, point `content.include` at the repository's
+Markdown corpus and review `site.siteUrl` and `site.baseUrl`.
 
 ## Repository-Specific Surface
 
@@ -19,6 +28,9 @@ Keep repository-specific changes limited to:
 The core package, Astro layouts, and search integration should stay shared.
 
 ## Git Submodule Layout
+
+Legacy compatibility. The npm package is the supported distribution; this layout
+is documented for repositories that already use it.
 
 If you keep the publisher in a submodule, treat the content repository as the project root:
 
@@ -35,6 +47,7 @@ The recommended multi-repository setup is the public organization-scoped npm pac
 
 ```bash
 npm install -D @echelon-foundry/research-publisher
+npx @echelon-foundry/research-publisher init
 ```
 
 Then keep the consumer repository focused on:
@@ -43,4 +56,4 @@ Then keep the consumer repository focused on:
 - content directories such as `research/`
 - local build output such as `dist/`
 
-Test changes locally by editing the package repository and running `npm test`, `npm run smoke:consumer`, and `npm run research:build`. Publish a new semantic version, then update the consumer repository to that version.
+Test changes locally by editing the package repository and running `npm test`, `npm run smoke:package`, `npm run smoke:consumer`, and `npm run research:build`. Publish a new semantic version through the release workflow, then update the consumer repository and run `npx @echelon-foundry/research-publisher upgrade`.
