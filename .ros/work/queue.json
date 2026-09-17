@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "research-publisher",
-  "nextSeq": 2,
+  "nextSeq": 3,
   "items": [
     {
       "id": "WI-0001",
@@ -15,6 +15,20 @@
       "attachments": [],
       "createdAt": "2026-09-17T10:45:02.067Z",
       "updatedAt": "2026-09-17T10:45:06.530Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0002",
+      "title": "Upgrade ROS installation from 1.2.1 to 3.0.3",
+      "description": "Adopts the 3.x governance documents and the ros-fs launcher. The ten scaffold files that blocked the upgrade had no local edits (single commit each, the original 1.2.1 install), so the 3.x versions replace them without losing work. Also sets ros.json rosVersion to 3.0.3, which ros upgrade does not do itself.",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-09-17T19:14:33.388Z",
+      "updatedAt": "2026-09-17T19:17:08Z",
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
