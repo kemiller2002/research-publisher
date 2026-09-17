@@ -130,7 +130,12 @@ async function main() {
   // The archive must carry the launcher and at least the host platform binary.
   const listing = run("tar", ["-tzf", tarball]);
   expectExit("tar -tzf", listing, 0);
-  const contents = listing.stdout.split("\n").filter(Boolean).map((entry) => entry.replace(/^package\//, ""));
+  // tar on Windows terminates lines with CRLF, so split on both and trim.
+  const contents = listing.stdout
+    .split(/\r?\n/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => entry.replace(/^package\//, ""));
 
   for (const required of [
     "package.json",

@@ -88,6 +88,10 @@ See [docs/cli.md](./docs/cli.md) for the full reference.
   as a self-contained binary.
 - No shell is assumed. Nothing depends on Bash or PowerShell behaviour.
 
+The lifecycle commands are exercised against the packed npm archive on Linux,
+Windows and macOS in CI. The publishing commands, which render the site through
+Astro and Pagefind, are exercised on Linux and macOS.
+
 On a platform with no packaged binary, lifecycle commands fail with exit code `7`
 and a clear message. The publishing commands still work.
 
