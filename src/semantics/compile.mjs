@@ -73,6 +73,7 @@ export async function compileSemanticCorpus({ projectRoot, parsedDocuments }) {
       canonicalUrl: artifact.url,
       headings: parsed.headings ?? [],
       links: parsed.links ?? [],
+      sourceMarkdown: parsed.body,
       contentHash: crypto.createHash("sha256").update(parsed.body).digest("hex"),
       compatibilityMode: Object.keys(parsed.frontmatter ?? {}).length === 0
     };

@@ -42,6 +42,7 @@
     "src/content",
     "src/metadata",
     "src/relationships",
+    "src/output",
     "src/validation",
     "site/src",
     "site/astro.config.mjs",

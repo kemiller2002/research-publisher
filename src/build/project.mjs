@@ -8,6 +8,7 @@ import { parseDocument, renderDocumentHtml } from "../content/parse-document.mjs
 import { resolveDocumentLink } from "../content/resolve-link.mjs";
 import { buildRelationshipGraph } from "../relationships/graph.mjs";
 import { compileSemanticCorpus } from "../semantics/compile.mjs";
+import { writeVersionedContracts } from "../output/contracts.mjs";
 import { ensureDirectory, writeJson } from "./filesystem.mjs";
 
 function normalizeBaseUrl(baseUrl) {
@@ -109,14 +110,33 @@ async function verifyOutput({ outputDirectory, catalog }) {
     }
   }
 
+  for (const document of catalog.records) {
+    for (const legacyUrl of document.legacyUrls ?? []) {
+      if (!legacyUrl.startsWith("/research/")) continue;
+      const redirectPath = path.join(outputDirectory, legacyUrl.replace(/^\//, ""), "index.html");
+      try {
+        await fs.access(redirectPath);
+      } catch {
+        issues.push({
+          severity: "error",
+          code: "lost-published-url",
+          sourcePath: document.sourcePath,
+          message: `Legacy published URL ${legacyUrl} was not emitted or redirected.`
+        });
+      }
+    }
+  }
+
   for (const requiredPath of [
     "data/research-catalog.json",
     "data/research-graph.json",
     "data/research-guides.json",
-    "data/v1/research-index.json",
-    "data/v1/relationship-index.json",
-    "data/v1/validation-report.json",
-    "data/v1/publication-manifest.json",
+    "data/v1/manifest.json",
+    "data/v1/artifacts.json",
+    "data/v1/edges.json",
+    "data/v1/findings.json",
+    "data/v1/redirects.json",
+    "data/v1/provenance.json",
     "pagefind/pagefind.js"
   ]) {
     const absolute = path.join(outputDirectory, requiredPath);
@@ -217,19 +237,17 @@ function publicDocument(document, config) {
   };
 }
 
-function createPublicCatalog(documents, config, buildGeneratedAt) {
+function createPublicCatalog(documents, config) {
   return {
-    schemaVersion: "2.0",
-    generatedOn: buildGeneratedAt,
+    schemaVersion: "1.1",
     project: config.site.title,
     records: documents.map((document) => publicDocument(document, config))
   };
 }
 
-function createPublicGuides(guides, config, buildGeneratedAt) {
+function createPublicGuides(guides, config) {
   return {
-    schemaVersion: "2.0",
-    generatedOn: buildGeneratedAt,
+    schemaVersion: "1.0",
     projects: createPublicCollections({ guides }, config).guides
   };
 }
@@ -388,12 +406,12 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
 
   const summary = summarizeDocuments(normalized);
   const internalCatalog = { schemaVersion: "2.0", project: config.site.title, records: normalized };
-  const catalog = createPublicCatalog(normalized, config, buildGeneratedAt);
+  const catalog = createPublicCatalog(normalized, config);
   const publicGraph = createPublicGraph(graph, config);
   const collections = createCollections(normalized);
   const guides = createGuides(normalized);
   const publicCollections = createPublicCollections(collections, config);
-  const publicGuides = createPublicGuides(guides, config, buildGeneratedAt);
+  const publicGuides = createPublicGuides(guides, config);
 
   await writeJson(path.join(dataDirectory, "catalog.json"), internalCatalog);
   await writeJson(path.join(dataDirectory, "graph.json"), graph);
@@ -401,7 +419,7 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   await writeJson(path.join(dataDirectory, "guides.json"), guides);
   await writeJson(path.join(dataDirectory, "semantics.json"), semantic);
   await writeJson(path.join(dataDirectory, "site.json"), {
-    site: { ...config.site, branding: config.branding, buildGeneratedAt },
+    site: { ...config.site, branding: config.branding },
     repository: config.repository,
     features: config.features,
     summary
@@ -418,15 +436,18 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   await renderAstroSite({ engineRoot, projectRoot, config, dataDirectory, outputDirectory, mode });
   const renderTimeMs = performance.now() - renderStarted;
 
-  await ensureDirectory(path.join(outputDirectory, "data/v1"));
+  await ensureDirectory(path.join(outputDirectory, "data"));
   await writeJson(path.join(outputDirectory, config.output.catalog), catalog);
   await writeJson(path.join(outputDirectory, "data/research-graph.json"), publicGraph);
   await writeJson(path.join(outputDirectory, "data/research-collections.json"), publicCollections);
   await writeJson(path.join(outputDirectory, "data/research-guides.json"), publicGuides);
-  await writeJson(path.join(outputDirectory, "data/v1/research-index.json"), createResearchIndex(normalized, config));
-  await writeJson(path.join(outputDirectory, "data/v1/relationship-index.json"), createRelationshipIndex(semantic.relationships, normalized, config));
-  await writeJson(path.join(outputDirectory, "data/v1/validation-report.json"), createValidationReport(semantic.findings));
-  await writeJson(path.join(outputDirectory, "data/v1/publication-manifest.json"), createPublicationManifest(semantic, normalized, semantic.relationships, summary));
+  await writeVersionedContracts({
+    outputDirectory,
+    semantic,
+    documents: normalized,
+    config,
+    summary
+  });
 
   const pagefindStarted = performance.now();
   await runPagefind({ engineRoot, outputDirectory });
@@ -434,8 +455,14 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
 
   const verificationDiagnostics = await verifyOutput({ outputDirectory, catalog: internalCatalog });
   const finalDiagnostics = diagnostics.concat(verificationDiagnostics);
-  const buildDiagnostics = {
+  const publicBuildDiagnostics = {
     schemaVersion: "2.0",
+    summary,
+    diagnostics: finalDiagnostics
+  };
+
+  const executionReport = {
+    schemaVersion: "1.0",
     generatedOn: buildGeneratedAt,
     performance: {
       documentCount: normalized.length,
@@ -448,8 +475,8 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
     diagnostics: finalDiagnostics
   };
 
-  await writeJson(path.join(outputDirectory, config.output.diagnostics), buildDiagnostics);
-  await writeJson(path.join(projectRoot, "build-reports/build-diagnostics.json"), buildDiagnostics);
+  await writeJson(path.join(outputDirectory, config.output.diagnostics), publicBuildDiagnostics);
+  await writeJson(path.join(projectRoot, "build-reports/build-diagnostics.json"), executionReport);
 
   if (finalDiagnostics.some((diagnostic) => diagnostic.severity === "error")) {
     throw new Error("Build completed with semantic or output validation errors.");

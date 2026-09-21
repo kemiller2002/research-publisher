@@ -70,11 +70,6 @@ const isCurrent = (href) => {
     <footer class="site-footer">
       <p><strong>{site.title}</strong></p>
       <p>Research made navigable, verifiable, and reusable.</p>
-      {buildGeneratedAtLabel ? (
-        <p class="site-build-stamp">
-          Build: <time datetime={buildGeneratedAt}>{buildGeneratedAtLabel}</time>
-        </p>
-      ) : null}
     </footer>
   </body>
 </html>

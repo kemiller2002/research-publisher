@@ -43,7 +43,8 @@ module Compiler =
               "evidenceIds"; "evidence_ids"
               "hypothesisIds"; "hypothesis_ids"
               "theoryIds"; "theory_ids"
-              "dependencies"; "references"; "evidence_level" ]
+              "dependencies"; "prerequisite"; "originates"; "related_artifacts"
+              "references"; "evidence_level" ]
 
     let private idPattern =
         Regex("^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+$", RegexOptions.Compiled)
@@ -221,6 +222,9 @@ module Compiler =
 
                 None, finding :: findings
 
+    let private normalizeArtifactType (value: string) =
+        value.Trim().ToLowerInvariant().Replace('_', '-')
+
     let private inferType
         (declaredId: string option)
         (sourcePath: string)
@@ -314,7 +318,9 @@ module Compiler =
                     [ "artifactType"; "artifact_type"; "document_type" ]
             with
             | Some(keyName, node) ->
-                nodeToString node, "front-matter:" + keyName
+                nodeToString node
+                |> Option.map normalizeArtifactType,
+                "front-matter:" + keyName
             | None ->
                 match inferType declaredId raw.SourcePath with
                 | Some(value, source) -> Some value, source
@@ -492,9 +498,17 @@ module Compiler =
             Relation = "superseded-by"
             Authority = Canonical
             Mode = Mixed }
-          { Aliases = [ "dependencies" ]
+          { Aliases = [ "dependencies"; "prerequisite" ]
             Relation = "prerequisite"
             Authority = Canonical
+            Mode = ForceId }
+          { Aliases = [ "originates" ]
+            Relation = "originates"
+            Authority = Canonical
+            Mode = Mixed }
+          { Aliases = [ "related_artifacts" ]
+            Relation = "related-artifact"
+            Authority = DeclaredUnclassified
             Mode = ForceId }
           { Aliases = [ "evidenceIds"; "evidence_ids" ]
             Relation = "evidence-reference"
