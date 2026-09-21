@@ -318,3 +318,60 @@ module SemanticsTests =
         Assert.Equal(Canonical, relationship.Authority)
         Assert.Equal("prerequisite", relationship.Relation)
         Assert.Equal(Resolved, relationship.Resolution)
+
+
+    [<Fact>]
+    let frontier_graph_relationships_are_derived_and_keep_graph_provenance () =
+        let compiled =
+            Compiler.compileWithDerived
+                [ raw
+                    "content/projects/example.md"
+                    (fm [ "id", "RP-EXAMPLE-001" ])
+                  raw
+                    "research/frontier/records/RFR-ABC12345.md"
+                    (fm
+                        [ "id", "RFR-ABC12345"
+                          "document_type", "research_frontier_record" ]) ]
+                [ { SourceRef = "DOC:content/projects/example.md"
+                    TargetRef = "RFR-ABC12345"
+                    Relation = "originates"
+                    EvidenceSource =
+                        "research/frontier/frontier-graph.json" } ]
+
+        let relationship = Assert.Single(compiled.Relationships)
+        Assert.Equal(Derived, relationship.Authority)
+        Assert.Equal(Resolved, relationship.Resolution)
+        Assert.Equal("originates", relationship.Relation)
+        Assert.Equal(Some "DOC:content/projects/example.md", relationship.RawSource)
+
+        Assert.Equal(
+            Some "research/frontier/frontier-graph.json",
+            relationship.EvidenceSource
+        )
+
+        Assert.Equal(Some "RFR-ABC12345", relationship.TargetId)
+
+    [<Fact>]
+    let unresolved_frontier_graph_endpoint_remains_visible () =
+        let compiled =
+            Compiler.compileWithDerived
+                [ raw
+                    "content/projects/example.md"
+                    (fm [ "id", "RP-EXAMPLE-001" ]) ]
+                [ { SourceRef = "DOC:content/projects/example.md"
+                    TargetRef = "RFR-MISSING"
+                    Relation = "originates"
+                    EvidenceSource =
+                        "research/frontier/frontier-graph.json" } ]
+
+        let relationship = Assert.Single(compiled.Relationships)
+        Assert.Equal(Dangling, relationship.Resolution)
+        Assert.Equal(Derived, relationship.Authority)
+
+        Assert.Contains(
+            compiled.Findings,
+            fun finding ->
+                finding.Code = "derived-relationship-unresolved"
+                && finding.SourcePath =
+                    "research/frontier/frontier-graph.json"
+        )
