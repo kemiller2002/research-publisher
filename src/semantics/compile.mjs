@@ -79,7 +79,7 @@ export async function compileSemanticCorpus({ projectRoot, parsedDocuments }) {
 
   if (result.status !== 0) {
     throw new Error(
-      \`F# semantic compilation failed with exit code \${result.status}: \${result.error ?? result.stdout ?? "no diagnostic output"}\`
+      `F# semantic compilation failed with exit code ${result.status}: ${result.error ?? result.stdout ?? "no diagnostic output"}`
     );
   }
 
@@ -89,7 +89,7 @@ export async function compileSemanticCorpus({ projectRoot, parsedDocuments }) {
   const artifacts = semantic.artifacts.map((artifact) => {
     const parsed = parsedByPath.get(artifact.sourcePath);
     if (!parsed) {
-      throw new Error(\`Semantic artifact \${artifact.sourcePath} has no parsed Markdown source.\`);
+      throw new Error(`Semantic artifact ${artifact.sourcePath} has no parsed Markdown source.`);
     }
 
     return {
