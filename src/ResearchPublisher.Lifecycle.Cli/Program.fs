@@ -2,6 +2,7 @@ namespace ResearchPublisher.Lifecycle.Cli
 
 open System
 open ResearchPublisher.Lifecycle.Core
+open ResearchPublisher.Semantics.Core
 
 /// The command-line adapter.
 ///
@@ -152,6 +153,15 @@ module Program =
             let inspection = Api.inspectRepository options.Common.RepositoryRoot
             let plan = Api.planUpgrade cliVersion inspection
             runPlanCommand writer options.Common cliVersion options.DryRun options.Check plan
+        | Command.CompileSemantics common ->
+            let pipedInput = Console.In.ReadToEnd()
+
+            if String.IsNullOrWhiteSpace(pipedInput) then
+                SemanticJson.compileRepository common.RepositoryRoot |> ignore
+            else
+                Console.Out.Write(SemanticJson.compileText pipedInput)
+
+            ExitCode.Success
         | Command.InstallPrompt common ->
             let writer = Writer(common.Json)
             let inspection = Api.inspectRepository common.RepositoryRoot

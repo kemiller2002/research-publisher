@@ -6,37 +6,28 @@ import { inventoryProject } from "../content/inventory.mjs";
 import { discoverFiles } from "../content/discover.mjs";
 import { parseDocument, renderDocumentHtml } from "../content/parse-document.mjs";
 import { resolveDocumentLink } from "../content/resolve-link.mjs";
-import { normalizeDocument } from "../metadata/normalize.mjs";
-import { validateDocuments } from "../validation/validate.mjs";
 import { buildRelationshipGraph } from "../relationships/graph.mjs";
+import { compileSemanticCorpus } from "../semantics/compile.mjs";
+import { writeVersionedContracts } from "../output/contracts.mjs";
 import { ensureDirectory, writeJson } from "./filesystem.mjs";
 
 function normalizeBaseUrl(baseUrl) {
-  if (!baseUrl || baseUrl === "/") {
-    return "/";
-  }
-
+  if (!baseUrl || baseUrl === "/") return "/";
   const withLeadingSlash = baseUrl.startsWith("/") ? baseUrl : `/${baseUrl}`;
   return withLeadingSlash.endsWith("/") ? withLeadingSlash : `${withLeadingSlash}/`;
 }
 
 function withBasePath(baseUrl, targetPath) {
-  if (!targetPath || targetPath.startsWith("#")) {
-    return targetPath;
-  }
-
-  if (/^(?:[a-z]+:)?\/\//i.test(targetPath)) {
-    return targetPath;
-  }
-
+  if (!targetPath || targetPath.startsWith("#")) return targetPath;
+  if (/^(?:[a-z]+:)?\/\//i.test(targetPath)) return targetPath;
   const normalizedBase = normalizeBaseUrl(baseUrl);
   const trimmedTarget = targetPath.replace(/^\/+/, "");
+  return normalizedBase === "/" ? `/${trimmedTarget}` : `${normalizedBase}${trimmedTarget}`;
+}
 
-  if (normalizedBase === "/") {
-    return `/${trimmedTarget}`;
-  }
-
-  return `${normalizedBase}${trimmedTarget}`;
+function increment(group, value) {
+  if (value == null || value === "") return;
+  group[value] = (group[value] ?? 0) + 1;
 }
 
 function summarizeDocuments(documents) {
@@ -44,18 +35,26 @@ function summarizeDocuments(documents) {
   const byResearchArea = {};
   const byProject = {};
   const byPurpose = {};
+  let unknownArtifactType = 0;
+  let unknownResearchArea = 0;
+
   for (const document of documents) {
-    byArtifactType[document.artifactType] = (byArtifactType[document.artifactType] ?? 0) + 1;
-    byResearchArea[document.researchArea] = (byResearchArea[document.researchArea] ?? 0) + 1;
-    if (document.project) {
-      byProject[document.project] = (byProject[document.project] ?? 0) + 1;
-    }
-    for (const purpose of document.purposes) {
-      byPurpose[purpose] = (byPurpose[purpose] ?? 0) + 1;
-    }
+    if (document.artifactType) increment(byArtifactType, document.artifactType);
+    else unknownArtifactType += 1;
+
+    if (document.researchArea) increment(byResearchArea, document.researchArea);
+    else unknownResearchArea += 1;
+
+    increment(byProject, document.project);
+    for (const purpose of document.purposes ?? []) increment(byPurpose, purpose);
   }
+
   return {
     totalDocuments: documents.length,
+    classifiedArtifactTypes: Object.values(byArtifactType).reduce((sum, count) => sum + count, 0),
+    classifiedResearchAreas: Object.values(byResearchArea).reduce((sum, count) => sum + count, 0),
+    unknownArtifactType,
+    unknownResearchArea,
     byArtifactType,
     byResearchArea,
     byProject,
@@ -65,18 +64,8 @@ function summarizeDocuments(documents) {
 
 function runProcess(command, args, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: "inherit",
-      ...options
-    });
-
-    child.on("exit", (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`${command} ${args.join(" ")} exited with code ${code}`));
-      }
-    });
+    const child = spawn(command, args, { stdio: "inherit", ...options });
+    child.on("exit", (code) => code === 0 ? resolve() : reject(new Error(`${command} ${args.join(" ")} exited with code ${code}`)));
     child.on("error", reject);
   });
 }
@@ -94,24 +83,15 @@ async function renderAstroSite({ engineRoot, projectRoot, config, dataDirectory,
   };
 
   if (mode === "dev") {
-    await runProcess("npx", ["astro", "dev", "--root", astroRoot, "--host"], {
-      cwd: astroRoot,
-      env
-    });
+    await runProcess("npx", ["astro", "dev", "--root", astroRoot, "--host"], { cwd: astroRoot, env });
     return;
   }
 
-  await runProcess("npx", ["astro", "build", "--root", astroRoot, "--outDir", outputDirectory], {
-    cwd: astroRoot,
-    env
-  });
+  await runProcess("npx", ["astro", "build", "--root", astroRoot, "--outDir", outputDirectory], { cwd: astroRoot, env });
 }
 
 async function runPagefind({ engineRoot, outputDirectory }) {
-  await runProcess("npx", ["pagefind", "--site", outputDirectory], {
-    cwd: engineRoot,
-    env: process.env
-  });
+  await runProcess("npx", ["pagefind", "--site", outputDirectory], { cwd: engineRoot, env: process.env });
 }
 
 async function verifyOutput({ outputDirectory, catalog }) {
@@ -130,20 +110,44 @@ async function verifyOutput({ outputDirectory, catalog }) {
     }
   }
 
+  for (const document of catalog.records) {
+    for (const legacyUrl of document.legacyUrls ?? []) {
+      if (!legacyUrl.startsWith("/research/")) continue;
+      const redirectPath = path.join(outputDirectory, legacyUrl.replace(/^\//, ""), "index.html");
+      try {
+        await fs.access(redirectPath);
+      } catch {
+        issues.push({
+          severity: "error",
+          code: "lost-published-url",
+          sourcePath: document.sourcePath,
+          message: `Legacy published URL ${legacyUrl} was not emitted or redirected.`
+        });
+      }
+    }
+  }
+
   for (const requiredPath of [
-    path.join(outputDirectory, "data/research-catalog.json"),
-    path.join(outputDirectory, "data/research-graph.json"),
-    path.join(outputDirectory, "data/research-guides.json"),
-    path.join(outputDirectory, "pagefind/pagefind.js")
+    "data/research-catalog.json",
+    "data/research-graph.json",
+    "data/research-guides.json",
+    "data/v1/manifest.json",
+    "data/v1/artifacts.json",
+    "data/v1/edges.json",
+    "data/v1/findings.json",
+    "data/v1/redirects.json",
+    "data/v1/provenance.json",
+    "pagefind/pagefind.js"
   ]) {
+    const absolute = path.join(outputDirectory, requiredPath);
     try {
-      await fs.access(requiredPath);
+      await fs.access(absolute);
     } catch {
       issues.push({
         severity: "error",
         code: "missing-output-artifact",
         sourcePath: requiredPath,
-        message: `Missing output artifact ${requiredPath}.`
+        message: `Missing output artifact ${absolute}.`
       });
     }
   }
@@ -154,11 +158,13 @@ async function verifyOutput({ outputDirectory, catalog }) {
 function createCollections(documents) {
   const grouped = (property) =>
     documents.reduce((accumulator, document) => {
-      const values = Array.isArray(document[property]) ? document[property] : [document[property]];
-      for (const value of values.filter(Boolean)) {
-        const key = String(value);
+      const value = document[property];
+      const values = Array.isArray(value) ? value : [value];
+      for (const item of values.filter((candidate) => candidate != null && candidate !== "")) {
+        const key = String(item);
         accumulator[key] ??= [];
         accumulator[key].push({
+          key: document.key,
           id: document.id,
           title: document.title,
           url: document.url,
@@ -195,9 +201,7 @@ function createGuides(documents) {
     .filter((document) => document.entryPoint)
     .sort((left, right) => {
       const projectComparison = (left.project ?? "").localeCompare(right.project ?? "");
-      if (projectComparison !== 0) {
-        return projectComparison;
-      }
+      if (projectComparison !== 0) return projectComparison;
       const orderComparison = (left.entryPointOrder ?? 999) - (right.entryPointOrder ?? 999);
       return orderComparison !== 0 ? orderComparison : left.title.localeCompare(right.title);
     })
@@ -205,6 +209,7 @@ function createGuides(documents) {
       const project = document.project ?? "unassigned";
       guides[project] ??= [];
       guides[project].push({
+        key: document.key,
         id: document.id,
         title: document.title,
         summary: document.summary,
@@ -223,22 +228,26 @@ function createGuides(documents) {
     }, {});
 }
 
+function publicDocument(document, config) {
+  return {
+    ...document,
+    url: withBasePath(config.site.baseUrl, document.url),
+    canonicalUrl: withBasePath(config.site.baseUrl, document.canonicalUrl),
+    legacyUrls: (document.legacyUrls ?? []).map((url) => withBasePath(config.site.baseUrl, url))
+  };
+}
+
 function createPublicCatalog(documents, config) {
   return {
     schemaVersion: "1.1",
-    generatedOn: "2026-07-22",
     project: config.site.title,
-    records: documents.map((document) => ({
-      ...document,
-      url: withBasePath(config.site.baseUrl, document.url)
-    }))
+    records: documents.map((document) => publicDocument(document, config))
   };
 }
 
 function createPublicGuides(guides, config) {
   return {
     schemaVersion: "1.0",
-    generatedOn: "2026-07-27",
     projects: createPublicCollections({ guides }, config).guides
   };
 }
@@ -246,10 +255,7 @@ function createPublicGuides(guides, config) {
 function createPublicGraph(graph, config) {
   return {
     ...graph,
-    nodes: graph.nodes.map((node) => ({
-      ...node,
-      url: withBasePath(config.site.baseUrl, node.url)
-    }))
+    nodes: graph.nodes.map((node) => ({ ...node, url: withBasePath(config.site.baseUrl, node.url) }))
   };
 }
 
@@ -260,20 +266,89 @@ function createPublicCollections(collections, config) {
       Object.fromEntries(
         Object.entries(terms).map(([term, documents]) => [
           term,
-          documents.map((document) => ({
-            ...document,
-            url: withBasePath(config.site.baseUrl, document.url)
-          }))
+          documents.map((document) => ({ ...document, url: withBasePath(config.site.baseUrl, document.url) }))
         ])
       )
     ])
   );
 }
 
+function createResearchIndex(documents, config) {
+  return {
+    schemaVersion: "1.0",
+    records: documents.map((document) => ({
+      key: document.key,
+      keyKind: document.keyKind,
+      id: document.id,
+      title: document.title,
+      artifactType: document.artifactType,
+      typeSource: document.typeSource,
+      project: document.project,
+      purposes: document.purposes,
+      audiences: document.audiences,
+      researchArea: document.researchArea,
+      status: document.status,
+      created: document.created,
+      updated: document.updated,
+      sourcePath: document.sourcePath,
+      url: withBasePath(config.site.baseUrl, document.url),
+      legacyUrls: (document.legacyUrls ?? []).map((url) => withBasePath(config.site.baseUrl, url)),
+      unknownFrontmatter: document.unknownFrontmatter
+    }))
+  };
+}
+
+function createRelationshipIndex(relationships, documents, config) {
+  const byKey = new Map(documents.map((document) => [document.key, document]));
+  return {
+    schemaVersion: "1.0",
+    relationships: relationships.map((relationship) => {
+      const target = relationship.targetKey ? byKey.get(relationship.targetKey) : null;
+      return {
+        ...relationship,
+        targetUrl: target ? withBasePath(config.site.baseUrl, target.url) : null
+      };
+    })
+  };
+}
+
+function createValidationReport(findings) {
+  return {
+    schemaVersion: "1.0",
+    findings
+  };
+}
+
+function createPublicationManifest(semantic, documents, relationships, summary) {
+  return {
+    schemaVersion: "1.0",
+    semanticSchemaVersion: semantic.schemaVersion,
+    identityPolicy: "declared-id-or-source-path",
+    canonicalSource: "ROS Markdown",
+    counts: {
+      artifacts: documents.length,
+      relationships: relationships.length,
+      blockingFindings: semantic.findings.filter((finding) => finding.severity === "blocking").length,
+      warnings: semantic.findings.filter((finding) => finding.severity === "warning").length,
+      unknownArtifactType: summary.unknownArtifactType,
+      unknownResearchArea: summary.unknownResearchArea
+    },
+    capabilities: semantic.capabilities,
+    outputs: [
+      "research-index.json",
+      "relationship-index.json",
+      "validation-report.json",
+      "publication-manifest.json"
+    ]
+  };
+}
+
 export async function buildProject({ engineRoot, projectRoot, config, mode = "build" }) {
   const startedAt = performance.now();
   const buildGeneratedAt = new Date().toISOString();
+
   await inventoryProject({ projectRoot, config });
+
   const discovered = await discoverFiles({
     projectRoot,
     include: config.content.include,
@@ -284,13 +359,12 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   const parsed = await Promise.all(discovered.map((relativePath) => parseDocument(projectRoot, relativePath)));
   const parseTimeMs = performance.now() - parseStarted;
 
+  const semantic = await compileSemanticCorpus({ projectRoot, parsedDocuments: parsed });
   const parsedBySourcePath = new Map(parsed.map((document) => [document.relativePath, document]));
-  const normalizedWithoutResolvedLinks = parsed.map(normalizeDocument);
-  const documentsBySourcePath = new Map(
-    normalizedWithoutResolvedLinks.map((document) => [document.sourcePath, document])
-  );
+  const documentsBySourcePath = new Map(semantic.artifacts.map((document) => [document.sourcePath, document]));
   const unresolvedLinkDiagnostics = [];
-  const normalized = await Promise.all(normalizedWithoutResolvedLinks.map(async (document) => {
+
+  const normalized = await Promise.all(semantic.artifacts.map(async (document) => {
     const parsedDocument = parsedBySourcePath.get(document.sourcePath);
     const html = await renderDocumentHtml(parsedDocument.body, (href) => {
       const resolution = resolveDocumentLink({
@@ -299,6 +373,7 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
         documentsBySourcePath,
         baseUrl: config.site.baseUrl
       });
+
       if (resolution.markdown && !resolution.resolved) {
         unresolvedLinkDiagnostics.push({
           severity: "warning",
@@ -307,23 +382,30 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
           message: `Markdown link ${href} does not match a published source document.`
         });
       }
+
       return resolution.href;
     });
+
     return { ...document, html };
   }));
+
   normalized.sort((left, right) => left.url.localeCompare(right.url));
-  const diagnostics = validateDocuments(normalized).concat(unresolvedLinkDiagnostics);
-  const graph = buildRelationshipGraph(normalized);
+
+  const semanticDiagnostics = semantic.findings.map((finding) => ({
+    ...finding,
+    severity: finding.severity === "blocking" ? "error" : finding.severity
+  }));
+
+  const diagnostics = semanticDiagnostics.concat(unresolvedLinkDiagnostics);
+  const graph = buildRelationshipGraph(normalized, semantic.relationships);
   const outputDirectory = path.join(projectRoot, config.output.directory);
   const internalDirectory = path.join(projectRoot, ".research-publisher", path.basename(config.output.directory) || "dist");
   const dataDirectory = path.join(internalDirectory, "data");
+
   await ensureDirectory(dataDirectory);
-  const internalCatalog = {
-    schemaVersion: "1.1",
-    generatedOn: "2026-07-22",
-    project: config.site.title,
-    records: normalized
-  };
+
+  const summary = summarizeDocuments(normalized);
+  const internalCatalog = { schemaVersion: "2.0", project: config.site.title, records: normalized };
   const catalog = createPublicCatalog(normalized, config);
   const publicGraph = createPublicGraph(graph, config);
   const collections = createCollections(normalized);
@@ -335,28 +417,20 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   await writeJson(path.join(dataDirectory, "graph.json"), graph);
   await writeJson(path.join(dataDirectory, "collections.json"), collections);
   await writeJson(path.join(dataDirectory, "guides.json"), guides);
+  await writeJson(path.join(dataDirectory, "semantics.json"), semantic);
   await writeJson(path.join(dataDirectory, "site.json"), {
-    site: {
-      ...config.site,
-      branding: config.branding,
-      buildGeneratedAt
-    },
+    site: { ...config.site, branding: config.branding },
     repository: config.repository,
     features: config.features,
-    summary: summarizeDocuments(normalized)
+    summary
   });
 
   if (mode === "validate") {
     await writeJson(path.join(projectRoot, "build-reports/validation-diagnostics.json"), diagnostics);
-    return {
-      diagnostics
-    };
+    return { diagnostics, semantic };
   }
 
-  await fs.rm(outputDirectory, {
-    recursive: true,
-    force: true
-  });
+  await fs.rm(outputDirectory, { recursive: true, force: true });
 
   const renderStarted = performance.now();
   await renderAstroSite({ engineRoot, projectRoot, config, dataDirectory, outputDirectory, mode });
@@ -365,28 +439,31 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   await ensureDirectory(path.join(outputDirectory, "data"));
   await writeJson(path.join(outputDirectory, config.output.catalog), catalog);
   await writeJson(path.join(outputDirectory, "data/research-graph.json"), publicGraph);
-  await writeJson(path.join(outputDirectory, "data/build-diagnostics.json"), {
-    schemaVersion: "1.0",
-    generatedOn: "2026-07-22",
-    performance: {
-      parseTimeMs,
-      renderTimeMs,
-      totalBuildTimeMs: performance.now() - startedAt
-    },
-    summary: summarizeDocuments(normalized),
-    diagnostics
-  });
   await writeJson(path.join(outputDirectory, "data/research-collections.json"), publicCollections);
   await writeJson(path.join(outputDirectory, "data/research-guides.json"), publicGuides);
+  await writeVersionedContracts({
+    outputDirectory,
+    semantic,
+    documents: normalized,
+    config,
+    summary
+  });
 
   const pagefindStarted = performance.now();
   await runPagefind({ engineRoot, outputDirectory });
   const pagefindTimeMs = performance.now() - pagefindStarted;
+
   const verificationDiagnostics = await verifyOutput({ outputDirectory, catalog: internalCatalog });
   const finalDiagnostics = diagnostics.concat(verificationDiagnostics);
-  const buildDiagnostics = {
+  const publicBuildDiagnostics = {
+    schemaVersion: "2.0",
+    summary,
+    diagnostics: finalDiagnostics
+  };
+
+  const executionReport = {
     schemaVersion: "1.0",
-    generatedOn: "2026-07-22",
+    generatedOn: buildGeneratedAt,
     performance: {
       documentCount: normalized.length,
       parseTimeMs,
@@ -394,19 +471,16 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
       searchIndexTimeMs: pagefindTimeMs,
       totalBuildTimeMs: performance.now() - startedAt
     },
-    summary: summarizeDocuments(normalized),
+    summary,
     diagnostics: finalDiagnostics
   };
-  await writeJson(path.join(outputDirectory, config.output.diagnostics), buildDiagnostics);
-  await writeJson(path.join(projectRoot, "build-reports/build-diagnostics.json"), buildDiagnostics);
+
+  await writeJson(path.join(outputDirectory, config.output.diagnostics), publicBuildDiagnostics);
+  await writeJson(path.join(projectRoot, "build-reports/build-diagnostics.json"), executionReport);
 
   if (finalDiagnostics.some((diagnostic) => diagnostic.severity === "error")) {
-    throw new Error("Build completed with validation errors.");
+    throw new Error("Build completed with semantic or output validation errors.");
   }
 
-  return {
-    catalog,
-    graph: publicGraph,
-    diagnostics: finalDiagnostics
-  };
+  return { catalog, graph: publicGraph, diagnostics: finalDiagnostics, semantic };
 }

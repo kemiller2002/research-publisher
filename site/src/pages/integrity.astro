@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { semantics, siteData } from "../utils/data";
+
+const findings = semantics.findings ?? [];
+const capabilities = semantics.capabilities ?? [];
+const blocking = findings.filter((finding) => finding.severity === "blocking");
+const warnings = findings.filter((finding) => finding.severity === "warning");
+const unavailable = capabilities.filter((capability) => !capability.available);
+const navItems = [
+  { href: "/", label: "Overview" },
+  { href: "/search/", label: "Search" },
+  { href: "/questions/", label: "Questions" },
+  { href: "/relationships/", label: "Relationships" }
+];
+---
+<BaseLayout title={`Integrity | ${siteData.site.title}`} description="Semantic validation and publication capability report." site={siteData.site} navItems={navItems}>
+  <section class="page-intro">
+    <p class="site-kicker">Integrity projection</p>
+    <h1>What the publisher knows, and what it does not</h1>
+    <p class="lede">Missing semantics remain missing. Unresolved declarations remain visible. Unsupported projections are reported instead of inferred.</p>
+  </section>
+
+  <dl class="stats-panel">
+    <div><dd>{blocking.length}</dd><dt>Blocking findings</dt></div>
+    <div><dd>{warnings.length}</dd><dt>Warnings</dt></div>
+    <div><dd>{unavailable.length}</dd><dt>Unavailable projections</dt></div>
+  </dl>
+
+  <section class="document-shell">
+    <h2>Projection capabilities</h2>
+    <ul>
+      {capabilities.map((capability) => (
+        <li>
+          <strong>{capability.name}</strong>: {capability.available ? "available" : "unavailable"}.
+          {" "}{capability.reason}
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="document-shell">
+    <h2>Semantic findings</h2>
+    {findings.length === 0 ? <p>No semantic findings were reported.</p> : (
+      <ul>
+        {findings.map((finding) => (
+          <li>
+            <strong>{finding.severity}: {finding.code}</strong> — {finding.sourcePath}: {finding.message}
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+</BaseLayout>

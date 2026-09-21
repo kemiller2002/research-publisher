@@ -1,3 +1,13 @@
+---
+project: visual-engineering
+purposes:
+  - apply
+  - reference
+audiences:
+  - practitioner
+  - contributor
+---
+
 # Agent Instructions
 
 Before UI work, read `UI-FOUNDATIONS.md`, `UI-DECISION-CHECKLIST.md`,

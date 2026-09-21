@@ -1,0 +1,24 @@
+---
+import ResearchDocumentLayout from "../../layouts/ResearchDocumentLayout.astro";
+import { catalog, graph, siteData } from "../../utils/data";
+
+export function getStaticPaths() {
+  return catalog.records
+    .filter((document) => document.id)
+    .map((document) => ({
+      params: { id: document.id },
+      props: { document }
+    }));
+}
+
+const { document } = Astro.props;
+const lookup = new Map(catalog.records.map((entry) => [entry.key, entry]));
+const related = (document.relationships ?? [])
+  .filter((relationship) => relationship.resolution === "resolved" && relationship.targetKey)
+  .map((relationship) => lookup.get(relationship.targetKey))
+  .filter(Boolean);
+const backlinkKeys = graph.backlinks[document.key] ?? [];
+const backlinks = backlinkKeys.map((key) => lookup.get(key)).filter(Boolean);
+---
+
+<ResearchDocumentLayout document={document} related={related} backlinks={backlinks} site={siteData.site} />

@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { catalog, semantics, siteData } from "../utils/data";
+import { withBasePath } from "../utils/paths";
+
+const lookup = new Map(catalog.records.map((document) => [document.key, document]));
+const relationships = semantics.relationships ?? [];
+const counts = relationships.reduce((accumulator, relationship) => {
+  accumulator[relationship.resolution] = (accumulator[relationship.resolution] ?? 0) + 1;
+  return accumulator;
+}, {});
+const navItems = [
+  { href: "/", label: "Overview" },
+  { href: "/search/", label: "Search" },
+  { href: "/questions/", label: "Questions" },
+  { href: "/integrity/", label: "Integrity" }
+];
+---
+<BaseLayout title={`Relationships | ${siteData.site.title}`} description="Declared research relationships and their resolution state." site={siteData.site} navItems={navItems}>
+  <section class="page-intro">
+    <p class="site-kicker">Relationship projection</p>
+    <h1>Declared relationships</h1>
+    <p class="lede">This view preserves resolved, dangling, ambiguous, and prose declarations. Bibliography entries are not treated as graph edges.</p>
+  </section>
+
+  <dl class="stats-panel">
+    <div><dd>{relationships.length}</dd><dt>Total declarations</dt></div>
+    <div><dd>{counts.resolved ?? 0}</dd><dt>Resolved</dt></div>
+    <div><dd>{(counts.dangling ?? 0) + (counts.ambiguous ?? 0)}</dd><dt>Needs attention</dt></div>
+  </dl>
+
+  <section class="document-shell">
+    <h2>Relationship index</h2>
+    {relationships.length === 0 ? (
+      <p>No relationship declarations are present in this corpus.</p>
+    ) : (
+      <ul>
+        {relationships.map((relationship) => {
+          const source = lookup.get(relationship.sourceKey);
+          const target = relationship.targetKey ? lookup.get(relationship.targetKey) : null;
+          return (
+            <li>
+              {source ? <a href={withBasePath(siteData.site.baseUrl, source.url)}>{source.title}</a> : relationship.sourcePath}
+              {" → "}
+              {target ? <a href={withBasePath(siteData.site.baseUrl, target.url)}>{target.title}</a> : <code>{relationship.rawTarget}</code>}
+              {" "}
+              <small>{relationship.relation}; {relationship.resolution}; {relationship.authority}</small>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </section>
+</BaseLayout>

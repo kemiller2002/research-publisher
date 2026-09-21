@@ -1,0 +1,34 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import DocumentCard from "../components/DocumentCard.astro";
+import { catalog, semantics, siteData } from "../utils/data";
+
+const capability = semantics.capabilities.find((item) => item.name === "question-view");
+const questions = catalog.records.filter(
+  (document) => document.artifactType === "frontier-record" || document.id?.startsWith("RFR-")
+);
+const navItems = [
+  { href: "/", label: "Overview" },
+  { href: "/search/", label: "Search" },
+  { href: "/relationships/", label: "Relationships" },
+  { href: "/integrity/", label: "Integrity" }
+];
+---
+<BaseLayout title={`Questions | ${siteData.site.title}`} description="Structured open questions in the research corpus." site={siteData.site} navItems={navItems}>
+  <section class="page-intro">
+    <p class="site-kicker">Question projection</p>
+    <h1>Open questions</h1>
+    <p class="lede">{capability?.reason}</p>
+  </section>
+
+  {questions.length > 0 ? (
+    <section class="card-grid">
+      {questions.map((document) => <DocumentCard document={document} baseUrl={siteData.site.baseUrl} />)}
+    </section>
+  ) : (
+    <section class="document-shell">
+      <h2>Not available from this corpus</h2>
+      <p>The publisher does not manufacture question objects from prose. A question appears here only when the source corpus provides a structured frontier record.</p>
+    </section>
+  )}
+</BaseLayout>

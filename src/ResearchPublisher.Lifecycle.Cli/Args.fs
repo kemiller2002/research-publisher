@@ -38,6 +38,7 @@ type Command =
     | Doctor of DoctorOptions
     /// Retained so the pre-lifecycle `install-prompt` command keeps working.
     | InstallPrompt of CommonOptions
+    | CompileSemantics of CommonOptions
     | Help of topic: string option
     | Version
 
@@ -48,6 +49,9 @@ module Args =
     /// Commands this executable runs.
     let commandNames =
         [ "init"; "status"; "verify"; "upgrade"; "doctor"; "install-prompt"; "help" ]
+
+    let private internalCommandNames = [ "compile-semantics" ]
+    let private acceptedCommandNames = commandNames @ internalCommandNames
 
     /// Commands handled by the JavaScript publishing engine. They are not run here,
     /// but `--help` documents them because the executable name is shared.
@@ -167,7 +171,7 @@ module Args =
             | Some name when not (List.contains name helpTopics) ->
                 Result.Error(sprintf "Unknown command '%s'." name)
             | topic -> Ok(Help topic)
-        | Some name when not (List.contains name commandNames) ->
+        | Some name when not (List.contains name acceptedCommandNames) ->
             Result.Error(sprintf "Unknown command '%s'." name)
         | Some name ->
             let rest =
@@ -200,4 +204,5 @@ module Args =
                     )
                 | "doctor" -> Ok(Doctor { Common = common; Strict = accumulator.Strict })
                 | "install-prompt" -> Ok(InstallPrompt common)
+                | "compile-semantics" -> Ok(CompileSemantics common)
                 | other -> Result.Error(sprintf "Unknown command '%s'." other)

@@ -7,27 +7,31 @@ const pageTitle = `${document.title} | ${site.title}`;
 const navItems = [
   { href: "/", label: "Overview" },
   { href: "/search/", label: "Search" },
-  { href: "/collections/artifact-type/", label: "Collections" }
+  { href: "/questions/", label: "Questions" },
+  { href: "/relationships/", label: "Relationships" },
+  { href: "/integrity/", label: "Integrity" }
 ];
+const unresolvedRelationships = (document.relationships ?? []).filter((relationship) => relationship.resolution !== "resolved");
 ---
-
 <BaseLayout title={pageTitle} description={document.summary || site.description} site={site} navItems={navItems}>
   <article class="document-shell" data-pagefind-body>
     <header class="document-header">
       <p class="eyebrow">
-        <span data-pagefind-meta="artifactType">{document.artifactType}</span>
+        <span data-pagefind-meta="artifactType">{document.artifactType || "Unclassified artifact"}</span>
         {document.id && <span data-pagefind-meta="stableId">{document.id}</span>}
       </p>
       <h1 data-pagefind-meta="title">{document.title}</h1>
       {document.summary && <p class="lede" data-pagefind-meta="summary">{document.summary}</p>}
       <dl class="metadata-panel">
         {document.id && <div><dt>Identifier</dt><dd>{document.id}</dd></div>}
-        <div><dt>Research Area</dt><dd data-pagefind-meta="researchArea">{document.researchArea}</dd></div>
+        <div><dt>Identity</dt><dd>{document.keyKind === "declared-id" ? "Declared artifact ID" : "Stable source-path identity"}</dd></div>
+        {document.researchArea && <div><dt>Research Area</dt><dd data-pagefind-meta="researchArea">{document.researchArea}</dd></div>}
+        {!document.researchArea && <div><dt>Research Area</dt><dd>Not specified</dd></div>}
         {document.project && <div><dt>Project</dt><dd data-pagefind-meta="project">{document.project}</dd></div>}
         {document.purposes?.length > 0 && <div><dt>Useful for</dt><dd data-pagefind-meta="purposes">{document.purposes.join(", ")}</dd></div>}
         {document.audiences?.length > 0 && <div><dt>Audience</dt><dd data-pagefind-meta="audiences">{document.audiences.join(", ")}</dd></div>}
         {document.discipline?.length > 0 && <div><dt>Discipline</dt><dd data-pagefind-meta="discipline">{document.discipline.join(", ")}</dd></div>}
-        <div><dt>Status</dt><dd data-pagefind-meta="status">{document.status}</dd></div>
+        <div><dt>Status</dt><dd data-pagefind-meta="status">{document.status || "Not specified"}</dd></div>
         {document.version && <div><dt>Version</dt><dd>{document.version}</dd></div>}
         {document.confidence != null && <div><dt>Confidence</dt><dd>{document.confidence}</dd></div>}
         {document.completion != null && <div><dt>Completion</dt><dd>{document.completion}</dd></div>}
@@ -52,21 +56,27 @@ const navItems = [
       <section class="document-body" set:html={document.html} />
     </div>
 
-    {(related.length > 0 || backlinks.length > 0) && (
+    {(related.length > 0 || backlinks.length > 0 || unresolvedRelationships.length > 0) && (
       <section class="relationship-grid">
         {related.length > 0 && (
           <section>
-            <h2>Related Documents</h2>
-            <ul>
-              {related.map((item) => <li><a href={withBasePath(site.baseUrl, item.url)}>{item.title}</a></li>)}
-            </ul>
+            <h2>Resolved relationships</h2>
+            <ul>{related.map((item) => <li><a href={withBasePath(site.baseUrl, item.url)}>{item.title}</a></li>)}</ul>
           </section>
         )}
         {backlinks.length > 0 && (
           <section>
             <h2>Backlinks</h2>
+            <ul>{backlinks.map((item) => <li><a href={withBasePath(site.baseUrl, item.url)}>{item.title}</a></li>)}</ul>
+          </section>
+        )}
+        {unresolvedRelationships.length > 0 && (
+          <section>
+            <h2>Unresolved declarations</h2>
             <ul>
-              {backlinks.map((item) => <li><a href={withBasePath(site.baseUrl, item.url)}>{item.title}</a></li>)}
+              {unresolvedRelationships.map((relationship) => (
+                <li><code>{relationship.field}</code>: {relationship.rawTarget} <small>({relationship.resolution})</small></li>
+              ))}
             </ul>
           </section>
         )}
