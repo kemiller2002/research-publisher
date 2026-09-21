@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "tool": "ros",
   "package": "@echelon-foundry/repository-operating-system",
-  "installedVersion": "3.0.3",
+  "installedVersion": "3.1.0",
   "configurationVersion": 1,
   "profile": "greenfield",
   "managedArtifacts": [
@@ -140,6 +140,11 @@
       "path": "docs/development-telemetry.md",
       "ownership": "tool-owned",
       "sha256": "0b707c333f2f21ab6b98b2fee8cc0b765c193969225230f5305807c28d5c7f20"
+    },
+    {
+      "path": "docs/ordo-observation.md",
+      "ownership": "tool-owned",
+      "sha256": "5f2962faab59eac5cd61825e2d16324d2b201360b32c338b0a945ff7e54eff4f"
     },
     {
       "path": "docs/work-adapter-contract.md",
@@ -309,7 +314,7 @@
     {
       "path": "ros.json",
       "ownership": "shared",
-      "sha256": "c4c1bdcad833e261b4fae21a5f88a9afe2e909e23f18326a2c97bd0db26adb8b"
+      "sha256": "a6806f8d5d1473832128c8509865d46af195a4d9eea629409ccd471ba5bccf87"
     },
     {
       "path": "schemas/artifact-metadata.schema.json",
@@ -350,6 +355,31 @@
       "path": "schemas/rep.schema.json",
       "ownership": "tool-owned",
       "sha256": "113772ad0f940862db173072e6664fdc3d4ebf2cbd68c155e88dd70e21bb277f"
+    },
+    {
+      "path": "schemas/ros-effect-observation.schema.json",
+      "ownership": "tool-owned",
+      "sha256": "99556bbbb818a654225f868aa4b1c9c01fce3d61f278b53a1e8f4ff6b3ebe47a"
+    },
+    {
+      "path": "schemas/ros-effective-current.schema.json",
+      "ownership": "tool-owned",
+      "sha256": "37a62b67fd86bc04256962fafe5fad49eb433e1529dd05dc81c4563b0bfa4e61"
+    },
+    {
+      "path": "schemas/ros-handoff-authority.schema.json",
+      "ownership": "tool-owned",
+      "sha256": "92484f8fe726f6db241c32ff3837f1923765865c20f1b806818762277fea8006"
+    },
+    {
+      "path": "schemas/ros-resolution-assessment.schema.json",
+      "ownership": "tool-owned",
+      "sha256": "0533cbd58fc78ec22c206c4dcbb1a8057b489b3cde17629f74098de0489cd610"
+    },
+    {
+      "path": "schemas/ros-search-observation.schema.json",
+      "ownership": "tool-owned",
+      "sha256": "76ae1a96abf03567596845e6b716b6b231090638810fc73449dc71cd57dbe7a6"
     },
     {
       "path": "schemas/theory.schema.json",
