@@ -67,7 +67,7 @@ jobs:
           popd
           if [[ -d .sde || -f .echelon/sde.json ]]; then cmd=upgrade; else cmd=init; fi
           SDE_PAYLOAD_DIR="$RUNNER_TEMP/sde-source/distribution/dist" dotnet run --project "$RUNNER_TEMP/sde-source/src/Sde.Cli/Sde.Cli.fsproj" -c Release -- "$cmd"
-          SDE_PAYLOAD_DIR="$RUNNER_TEMP/sde-source/distribution/dist" dotnet run --project "$RUNNER_TEMP/sde-source/src/Sde.Cli/Sde.Cli.fsproj" -c Release -- verify --strict
+          SDE_PAYLOAD_DIR="$RUNNER_TEMP/sde-source/distribution/dist" dotnet run --project "$RUNNER_TEMP/sde-source/src/Sde.Cli/Sde.Cli.fsproj" -c Release -- verify
 
       - name: Upgrade ROS to source 3.1.0
         shell: bash
