@@ -6,61 +6,62 @@ import { withBasePath } from "../utils/paths";
 
 const navItems = [
   { href: "/search/", label: "Search" },
-  { href: "/collections/artifact-type/", label: "Collections" }
+  { href: "/questions/", label: "Questions" },
+  { href: "/relationships/", label: "Relationships" },
+  { href: "/integrity/", label: "Integrity" }
 ];
 const recentDocuments = [...catalog.records]
-  .sort((left, right) => right.updated.localeCompare(left.updated))
+  .sort((left, right) => (right.updated ?? "").localeCompare(left.updated ?? ""))
   .slice(0, 6);
 const entryDocuments = Object.values(guides).flat().slice(0, 6);
 const featuredDocuments = entryDocuments.length > 0 ? entryDocuments : recentDocuments;
 ---
-
 <BaseLayout title={siteData.site.title} description={siteData.site.description} site={siteData.site} navItems={navItems}>
   <section class="hero">
     <div class="hero__copy">
-      <p class="site-kicker">Visual Engineering research archive</p>
+      <p class="site-kicker">Research archive</p>
       <h1>Find the thinking<br />behind the work.</h1>
-      <p class="lede">Explore a living corpus of evidence, experiments, concepts, and working theories about how visual systems help people understand and act.</p>
+      <p class="lede">Explore source-grounded research without turning missing metadata, unresolved relationships, or uncertain semantics into invented certainty.</p>
       <div class="hero-actions">
         <a class="button" href={withBasePath(siteData.site.baseUrl, "/search/")}>Search all research <span aria-hidden="true">→</span></a>
-        <a class="text-link" href={withBasePath(siteData.site.baseUrl, "/collections/artifact-type/")}>Browse by collection</a>
+        <a class="text-link" href={withBasePath(siteData.site.baseUrl, "/relationships/")}>Explore relationships</a>
       </div>
     </div>
     <dl class="stats-panel">
-      <div><dd>{siteData.summary.totalDocuments}</dd><dt>Documents indexed</dt></div>
-      <div><dd>{Object.keys(collections.artifactTypes).length}</dd><dt>Artifact types</dt></div>
-      <div><dd>{Object.keys(collections.researchAreas).length}</dd><dt>Research areas</dt></div>
+      <div><dd>{siteData.summary.totalDocuments}</dd><dt>Artifacts indexed</dt></div>
+      <div><dd>{Object.keys(collections.artifactTypes).length}</dd><dt>Declared/inferred types</dt></div>
+      <div><dd>{siteData.summary.unknownArtifactType}</dd><dt>Unknown types preserved</dt></div>
     </dl>
   </section>
 
   <section class="feature-grid" aria-labelledby="explore-heading">
     <div class="section-heading">
-      <p class="site-kicker">Explore the corpus</p>
-      <h2 id="explore-heading">Follow the shape of the research</h2>
+      <p class="site-kicker">Semantic projections</p>
+      <h2 id="explore-heading">Use the view that fits the question</h2>
     </div>
     <article>
       <p class="feature-number" aria-hidden="true">01</p>
-      <h3>By artifact</h3>
-      <p>Move from raw evidence and research notes to hypotheses and durable theory.</p>
-      <a href={withBasePath(siteData.site.baseUrl, "/collections/artifact-type/")}>View artifact types <span aria-hidden="true">→</span></a>
+      <h3>Research</h3>
+      <p>Browse artifacts by the metadata the source actually declares.</p>
+      <a href={withBasePath(siteData.site.baseUrl, "/collections/artifact-type/")}>Browse artifacts <span aria-hidden="true">→</span></a>
     </article>
     <article>
       <p class="feature-number" aria-hidden="true">02</p>
-      <h3>By area</h3>
-      <p>Trace related work across composition, publishing, evidence, and human factors.</p>
-      <a href={withBasePath(siteData.site.baseUrl, "/collections/research-area/")}>View research areas <span aria-hidden="true">→</span></a>
+      <h3>Relationships</h3>
+      <p>See resolved, dangling, ambiguous, and prose declarations instead of silently losing them.</p>
+      <a href={withBasePath(siteData.site.baseUrl, "/relationships/")}>View relationships <span aria-hidden="true">→</span></a>
     </article>
     <article>
       <p class="feature-number" aria-hidden="true">03</p>
-      <h3>By status</h3>
-      <p>Choose a path for orientation, decisions, application, verification, or deeper research.</p>
-      <a href={withBasePath(siteData.site.baseUrl, "/collections/purpose/")}>View reader purposes <span aria-hidden="true">→</span></a>
+      <h3>Integrity</h3>
+      <p>Inspect semantic warnings, unknowns, and unavailable projections before drawing conclusions.</p>
+      <a href={withBasePath(siteData.site.baseUrl, "/integrity/")}>View integrity <span aria-hidden="true">→</span></a>
     </article>
   </section>
 
   <section class="page-intro page-intro--split">
     <div>
-    <p class="site-kicker">{entryDocuments.length > 0 ? "Start here" : "Recently updated"}</p>
+      <p class="site-kicker">{entryDocuments.length > 0 ? "Start here" : "Recently updated"}</p>
       <h2>{entryDocuments.length > 0 ? "Guides to the research" : "Latest from the archive"}</h2>
     </div>
     <a class="text-link" href={withBasePath(siteData.site.baseUrl, "/search/")}>Search the full index</a>

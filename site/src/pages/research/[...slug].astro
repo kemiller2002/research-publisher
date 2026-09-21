@@ -1,25 +1,31 @@
 ---
-import ResearchDocumentLayout from "../../layouts/ResearchDocumentLayout.astro";
-import { catalog, graph, siteData } from "../../utils/data";
+import { catalog, siteData } from "../../utils/data";
+import { withBasePath } from "../../utils/paths";
 
 export function getStaticPaths() {
-  return catalog.records.map((document) => ({
-    params: {
-      slug: document.url.replace(/^\/research\//, "").replace(/\/$/, "")
-    },
-    props: {
-      document
-    }
-  }));
+  return catalog.records.flatMap((document) =>
+    (document.legacyUrls ?? [])
+      .filter((url) => url.startsWith("/research/"))
+      .map((url) => ({
+        params: { slug: url.replace(/^\/research\//, "").replace(/\/$/, "") },
+        props: { document }
+      }))
+  );
 }
 
 const { document } = Astro.props;
-const lookup = new Map(catalog.records.filter((entry) => entry.id).map((entry) => [entry.id, entry]));
-const relatedIds = [...document.relatedDocuments, ...document.evidenceIds, ...document.hypothesisIds, ...document.theoryIds];
-const related = relatedIds.map((id) => lookup.get(id)).filter(Boolean);
-const backlinkIds = graph.backlinks[document.id ?? document.slug] ?? [];
-const backlinks = backlinkIds.map((id) => lookup.get(id)).filter(Boolean);
+const target = withBasePath(siteData.site.baseUrl, document.url);
 ---
-
-<ResearchDocumentLayout document={document} related={related} backlinks={backlinks} site={siteData.site} />
-
+<!doctype html>
+<html lang={siteData.site.language ?? "en"}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0;url=${target}`} />
+    <link rel="canonical" href={target} />
+    <title>{document.title}</title>
+  </head>
+  <body>
+    <p>This research document has a stable address. <a href={target}>Continue to {document.title}</a>.</p>
+  </body>
+</html>
