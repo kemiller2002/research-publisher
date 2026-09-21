@@ -122,7 +122,8 @@ module Compiler =
             values
             |> Seq.choose (fun item ->
                 if isNull item then None else nodeToString item)
-            |> Seq.collect splitValues
+            |> Seq.filter (fun value ->
+                not (String.IsNullOrWhiteSpace value))
             |> Seq.toList
         | _ ->
             match nodeToString node with

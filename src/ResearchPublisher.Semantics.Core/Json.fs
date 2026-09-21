@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
+open System.Text.Json.Serialization.Metadata
 
 module SemanticJson =
 
@@ -258,6 +259,7 @@ module SemanticJson =
 
         let options = JsonSerializerOptions()
         options.WriteIndented <- true
+        options.TypeInfoResolver <- DefaultJsonTypeInfoResolver()
         root.ToJsonString(options)
 
     let compileRepository
