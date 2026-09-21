@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - "chore/echelon-capability-upgrade-2026-09-21"
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
