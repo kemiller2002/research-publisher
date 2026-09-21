@@ -2,6 +2,7 @@ namespace ResearchPublisher.Lifecycle.Cli
 
 open System
 open ResearchPublisher.Lifecycle.Core
+open ResearchPublisher.Semantics.Core
 
 /// The command-line adapter.
 ///
