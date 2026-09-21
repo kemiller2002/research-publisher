@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../ResearchPublisher.Lifecycle.Core/ResearchPublisher.Lifecycle.Core.fsproj" />
+    <ProjectReference Include="../ResearchPublisher.Semantics.Core/ResearchPublisher.Semantics.Core.fsproj" />
   </ItemGroup>
 
 </Project>

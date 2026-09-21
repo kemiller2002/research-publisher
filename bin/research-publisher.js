@@ -14,6 +14,7 @@ const LIFECYCLE_COMMANDS = new Set([
   "upgrade",
   "doctor",
   "install-prompt",
+  "compile-semantics",
   "help"
 ]);
 

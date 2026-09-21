@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <AssemblyName>ResearchPublisher.Semantics.Core</AssemblyName>
+    <RootNamespace>ResearchPublisher.Semantics.Core</RootNamespace>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Domain.fs" />
+    <Compile Include="Compiler.fs" />
+    <Compile Include="Json.fs" />
+  </ItemGroup>
+</Project>

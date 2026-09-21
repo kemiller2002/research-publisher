@@ -152,6 +152,9 @@ module Program =
             let inspection = Api.inspectRepository options.Common.RepositoryRoot
             let plan = Api.planUpgrade cliVersion inspection
             runPlanCommand writer options.Common cliVersion options.DryRun options.Check plan
+        | Command.CompileSemantics common ->
+            SemanticJson.compileRepository common.RepositoryRoot |> ignore
+            ExitCode.Success
         | Command.InstallPrompt common ->
             let writer = Writer(common.Json)
             let inspection = Api.inspectRepository common.RepositoryRoot
