@@ -291,6 +291,39 @@ module SemanticJson =
         writer.Flush()
         Encoding.UTF8.GetString(stream.ToArray())
 
+    let private compileRoot (root: JsonObject) : Compilation =
+        let rawDocuments =
+            match root["documents"] with
+            | :? JsonArray as values ->
+                values
+                |> Seq.choose rawDocumentFromNode
+                |> Seq.toList
+            | _ -> []
+
+        let rawDerivedRelationships =
+            match root["derivedRelationships"] with
+            | :? JsonArray as values ->
+                values
+                |> Seq.choose rawDerivedRelationshipFromNode
+                |> Seq.toList
+            | _ -> []
+
+        Compiler.compileWithDerived
+            rawDocuments
+            rawDerivedRelationships
+
+    let compileText (text: string) : string =
+        let parsed = JsonNode.Parse(text)
+
+        let root =
+            match parsed with
+            | :? JsonObject as value -> value
+            | _ ->
+                invalidOp
+                    "Semantic compiler input root must be a JSON object."
+
+        compileRoot root |> toJson
+
     let compileRepository
         (repositoryRoot: string)
         : Compilation =
@@ -319,26 +352,7 @@ module SemanticJson =
                 invalidOp
                     "Semantic compiler input root must be a JSON object."
 
-        let rawDocuments =
-            match root["documents"] with
-            | :? JsonArray as values ->
-                values
-                |> Seq.choose rawDocumentFromNode
-                |> Seq.toList
-            | _ -> []
-
-        let rawDerivedRelationships =
-            match root["derivedRelationships"] with
-            | :? JsonArray as values ->
-                values
-                |> Seq.choose rawDerivedRelationshipFromNode
-                |> Seq.toList
-            | _ -> []
-
-        let compilation =
-            Compiler.compileWithDerived
-                rawDocuments
-                rawDerivedRelationships
+        let compilation = compileRoot root
 
         Directory.CreateDirectory(stateDirectory)
         |> ignore

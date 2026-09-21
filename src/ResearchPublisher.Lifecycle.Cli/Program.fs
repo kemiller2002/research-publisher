@@ -154,7 +154,13 @@ module Program =
             let plan = Api.planUpgrade cliVersion inspection
             runPlanCommand writer options.Common cliVersion options.DryRun options.Check plan
         | Command.CompileSemantics common ->
-            SemanticJson.compileRepository common.RepositoryRoot |> ignore
+            let pipedInput = Console.In.ReadToEnd()
+
+            if String.IsNullOrWhiteSpace(pipedInput) then
+                SemanticJson.compileRepository common.RepositoryRoot |> ignore
+            else
+                Console.Out.Write(SemanticJson.compileText pipedInput)
+
             ExitCode.Success
         | Command.InstallPrompt common ->
             let writer = Writer(common.Json)

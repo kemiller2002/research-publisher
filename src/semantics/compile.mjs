@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { runLifecycle } from "../../bin/lifecycle-runtime.js";
-import { ensureDirectory, writeJson } from "../build/filesystem.mjs";
 
 function compatibilityRelationshipLists(artifact) {
   const relationships = artifact.relationships ?? [];
@@ -60,13 +59,8 @@ async function loadDerivedRelationships(projectRoot) {
 }
 
 export async function compileSemanticCorpus({ projectRoot, parsedDocuments }) {
-  const stateDirectory = path.join(projectRoot, ".research-publisher");
-  await ensureDirectory(stateDirectory);
-
-  const inputPath = path.join(stateDirectory, "semantic-input.json");
   const derivedRelationships = await loadDerivedRelationships(projectRoot);
-
-  await writeJson(inputPath, {
+  const input = JSON.stringify({
     schemaVersion: "1.0",
     documents: parsedDocuments.map((document) => ({
       sourcePath: document.relativePath,
@@ -79,23 +73,23 @@ export async function compileSemanticCorpus({ projectRoot, parsedDocuments }) {
 
   const result = runLifecycle(["compile-semantics", "--repo", projectRoot], {
     capture: true,
+    input,
     cwd: projectRoot
   });
 
   if (result.status !== 0) {
     throw new Error(
-      `F# semantic compilation failed with exit code ${result.status}: ${result.error ?? result.stdout ?? "no diagnostic output"}`
+      \`F# semantic compilation failed with exit code \${result.status}: \${result.error ?? result.stdout ?? "no diagnostic output"}\`
     );
   }
 
-  const semanticPath = path.join(stateDirectory, "semantic-output.json");
-  const semantic = JSON.parse(await fs.readFile(semanticPath, "utf8"));
+  const semantic = JSON.parse(result.stdout);
   const parsedByPath = new Map(parsedDocuments.map((document) => [document.relativePath, document]));
 
   const artifacts = semantic.artifacts.map((artifact) => {
     const parsed = parsedByPath.get(artifact.sourcePath);
     if (!parsed) {
-      throw new Error(`Semantic artifact ${artifact.sourcePath} has no parsed Markdown source.`);
+      throw new Error(\`Semantic artifact \${artifact.sourcePath} has no parsed Markdown source.\`);
     }
 
     return {
