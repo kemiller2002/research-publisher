@@ -100,6 +100,7 @@ export function runLifecycle(args, options = {}) {
       ? [hasInput ? "pipe" : "inherit", "pipe", "inherit"]
       : "inherit",
     input: hasInput ? options.input : undefined,
+    maxBuffer: options.maxBuffer ?? 64 * 1024 * 1024,
     env: childEnvironment(),
     encoding: "utf8",
     cwd: options.cwd ?? process.cwd()
