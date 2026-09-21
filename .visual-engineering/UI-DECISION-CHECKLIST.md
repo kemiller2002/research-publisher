@@ -1,3 +1,13 @@
+---
+project: visual-engineering
+purposes:
+  - apply
+  - reference
+audiences:
+  - practitioner
+  - contributor
+---
+
 # Visual Engineering UI Decision Checklist
 
 ## Before implementation

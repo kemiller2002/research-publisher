@@ -1,3 +1,16 @@
+---
+project: visual-engineering
+purposes:
+  - apply
+  - reference
+audiences:
+  - practitioner
+  - contributor
+entryPoint: true
+entryPointOrder: 10
+entryPointLabel: Practical guide
+---
+
 # Visual Engineering UI Foundations
 
 This is the operational briefing for agents designing, implementing, or reviewing user interfaces. It synthesizes current Visual Engineering research; the generated research index supplies provenance and current source coverage.
