@@ -6,76 +6,306 @@ open System.Text.Json
 open System.Text.Json.Nodes
 
 module SemanticJson =
-    let private s value = JsonValue.Create(value) :> JsonNode
-    let private b value = JsonValue.Create(value) :> JsonNode
-    let private n value = JsonValue.Create(value) :> JsonNode
-    let private os = function Some v -> s v | None -> null
-    let private on = function Some v -> n v | None -> null
-    let private sa values = let a=JsonArray() in for v in values do a.Add(s v); a
-    let private asInt fallback node = match node with :? JsonValue as v -> try v.GetValue<int>() with _ -> fallback | _ -> fallback
-    let private asString fallback node = match node with :? JsonValue as v -> try v.GetValue<string>() with _ -> fallback | _ -> fallback
 
-    let private rawHeading node : Compiler.RawHeading option =
-        match node with :? JsonObject as o -> Some {Depth=asInt 0 o["depth"];Text=asString "" o["text"]} | _ -> None
+    let private stringNode (value: string) : JsonNode =
+        JsonValue.Create<string>(value) :> JsonNode
 
-    let private rawDocument node : Compiler.RawDocument option =
+    let private boolNode (value: bool) : JsonNode =
+        JsonValue.Create<bool>(value) :> JsonNode
+
+    let private numberNode (value: float) : JsonNode =
+        JsonValue.Create<float>(value) :> JsonNode
+
+    let private optionalString (value: string option) : JsonNode =
+        match value with
+        | Some text -> stringNode text
+        | None -> null
+
+    let private optionalNumber (value: float option) : JsonNode =
+        match value with
+        | Some number -> numberNode number
+        | None -> null
+
+    let private stringArray (values: string list) : JsonArray =
+        let result = JsonArray()
+
+        for value in values do
+            result.Add(stringNode value)
+
+        result
+
+    let private valueAsInt
+        (fallback: int)
+        (node: JsonNode)
+        : int =
         match node with
-        | :? JsonObject as o ->
-            let path=asString "" o["sourcePath"]
-            if String.IsNullOrWhiteSpace path then None else
-            let fm=match o["frontmatter"] with :? JsonObject as v -> v.DeepClone() :?> JsonObject | _ -> JsonObject()
-            let e=asString "" o["excerpt"]
-            let hs=match o["headings"] with :? JsonArray as a -> a|>Seq.choose rawHeading|>Seq.toList | _ -> []
-            Some {SourcePath=path;FrontMatter=fm;Excerpt=if String.IsNullOrWhiteSpace e then None else Some e;Headings=hs}
+        | :? JsonValue as value ->
+            try
+                value.GetValue<int>()
+            with _ ->
+                fallback
+        | _ -> fallback
+
+    let private valueAsString
+        (fallback: string)
+        (node: JsonNode)
+        : string =
+        match node with
+        | :? JsonValue as value ->
+            try
+                value.GetValue<string>()
+            with _ ->
+                fallback
+        | _ -> fallback
+
+    let private rawHeadingFromNode
+        (node: JsonNode)
+        : Compiler.RawHeading option =
+        match node with
+        | :? JsonObject as obj ->
+            Some
+                { Depth = valueAsInt 0 obj["depth"]
+                  Text = valueAsString "" obj["text"] }
         | _ -> None
 
-    let private finding (f:Finding) =
-        let o=JsonObject()
-        o["code"]<-s f.Code; o["severity"]<-s(Severity.toWire f.Severity); o["sourcePath"]<-s f.SourcePath
-        o["frontMatterKey"]<-os f.FrontMatterKey; o["message"]<-s f.Message; o["remedy"]<-os f.Remedy; o
+    let private rawDocumentFromNode
+        (node: JsonNode)
+        : Compiler.RawDocument option =
+        match node with
+        | :? JsonObject as obj ->
+            let sourcePath =
+                valueAsString "" obj["sourcePath"]
 
-    let private relation (r:Relationship) =
-        let o=JsonObject()
-        o["sourceKey"]<-s r.SourceKey; o["sourcePath"]<-s r.SourcePath; o["field"]<-s r.Field; o["relation"]<-s r.Relation
-        o["authority"]<-s(RelationAuthority.toWire r.Authority); o["rawTarget"]<-s r.RawTarget; o["referenceKind"]<-s(ReferenceKind.toWire r.ReferenceKind)
-        o["resolution"]<-s(ResolutionStatus.toWire r.Resolution); o["targetKey"]<-os r.TargetKey; o["targetId"]<-os r.TargetId
-        o["targetSourcePath"]<-os r.TargetSourcePath; o["targetTitle"]<-os r.TargetTitle; o
+            if String.IsNullOrWhiteSpace(sourcePath) then
+                None
+            else
+                let frontMatter =
+                    match obj["frontmatter"] with
+                    | :? JsonObject as value ->
+                        value.DeepClone() :?> JsonObject
+                    | _ -> JsonObject()
 
-    let private artifact (rels:Relationship list) (a:Artifact) =
-        let o=JsonObject()
-        o["key"]<-s a.Key; o["keyKind"]<-s a.KeyKind; o["id"]<-os a.DeclaredId; o["title"]<-s a.Title; o["titleSource"]<-s a.TitleSource
-        o["artifactType"]<-os a.ArtifactType; o["typeSource"]<-s a.TypeSource; o["project"]<-os a.Project; o["purposes"]<-sa a.Purposes
-        o["audiences"]<-sa a.Audiences; o["entryPoint"]<-b a.EntryPoint; o["entryPointOrder"]<-on a.EntryPointOrder; o["entryPointLabel"]<-os a.EntryPointLabel
-        o["researchArea"]<-os a.ResearchArea; o["discipline"]<-sa a.Discipline; o["summary"]<-os a.Summary; o["status"]<-os a.Status
-        o["version"]<-os a.Version; o["confidence"]<-on a.Confidence; o["completion"]<-on a.Completion; o["priority"]<-os a.Priority
-        o["authorAgent"]<-os a.AuthorAgent; o["created"]<-os a.Created; o["updated"]<-os a.Updated; o["tags"]<-sa a.Tags; o["keywords"]<-sa a.Keywords
-        o["relatedProjects"]<-sa a.RelatedProjects; o["bibliography"]<-sa a.Bibliography; o["sourcePath"]<-s a.SourcePath; o["url"]<-s a.CanonicalUrl
-        o["legacyUrls"]<-sa a.LegacyUrls; o["rawFrontmatter"]<-a.FrontMatter.DeepClone(); o["unknownFrontmatter"]<-a.UnknownFrontMatter.DeepClone()
-        let ra=JsonArray()
-        for r in rels|>List.filter(fun r->r.SourceKey=a.Key) do ra.Add(relation r)
-        o["relationships"]<-ra; o
+                let excerpt =
+                    let value =
+                        valueAsString "" obj["excerpt"]
 
-    let toJson (c:Compilation) =
-        let root=JsonObject()
-        root["schemaVersion"]<-s "2.0"
-        let aa=JsonArray(); for a in c.Artifacts do aa.Add(artifact c.Relationships a); root["artifacts"]<-aa
-        let rr=JsonArray(); for r in c.Relationships do rr.Add(relation r); root["relationships"]<-rr
-        let ff=JsonArray(); for f in c.Findings do ff.Add(finding f); root["findings"]<-ff
-        let cc=JsonArray()
-        for c in c.Capabilities do let o=JsonObject() in o["name"]<-s c.Name; o["available"]<-b c.Available; o["reason"]<-s c.Reason; cc.Add o
-        root["capabilities"]<-cc
-        let red=JsonObject(); for oldUrl,newUrl in c.Redirects do red[oldUrl]<-s newUrl; root["redirects"]<-red
-        root.ToJsonString(JsonSerializerOptions(WriteIndented=true))
+                    if String.IsNullOrWhiteSpace(value) then
+                        None
+                    else
+                        Some value
 
-    let compileRepository repositoryRoot =
-        let dir=Path.Combine(repositoryRoot,".research-publisher")
-        let input=Path.Combine(dir,"semantic-input.json")
-        let output=Path.Combine(dir,"semantic-output.json")
-        if not(File.Exists input) then invalidOp(sprintf "Semantic compiler input is missing: %s" input)
-        let parsed=JsonNode.Parse(File.ReadAllText input)
-        let root=match parsed with :? JsonObject as o -> o | _ -> invalidOp "Semantic compiler input root must be a JSON object."
-        let docs=match root["documents"] with :? JsonArray as a -> a|>Seq.choose rawDocument|>Seq.toList | _ -> []
-        let compiled=Compiler.compile docs
-        Directory.CreateDirectory dir |> ignore
-        File.WriteAllText(output,toJson compiled)
-        compiled
+                let headings =
+                    match obj["headings"] with
+                    | :? JsonArray as values ->
+                        values
+                        |> Seq.choose rawHeadingFromNode
+                        |> Seq.toList
+                    | _ -> []
+
+                Some
+                    { SourcePath = sourcePath
+                      FrontMatter = frontMatter
+                      Excerpt = excerpt
+                      Headings = headings }
+        | _ -> None
+
+    let private findingNode (finding: Finding) : JsonObject =
+        let obj = JsonObject()
+        obj["code"] <- stringNode finding.Code
+        obj["severity"] <- stringNode (Severity.toWire finding.Severity)
+        obj["sourcePath"] <- stringNode finding.SourcePath
+        obj["frontMatterKey"] <- optionalString finding.FrontMatterKey
+        obj["message"] <- stringNode finding.Message
+        obj["remedy"] <- optionalString finding.Remedy
+        obj
+
+    let private relationshipNode
+        (relationship: Relationship)
+        : JsonObject =
+        let obj = JsonObject()
+        obj["sourceKey"] <- stringNode relationship.SourceKey
+        obj["sourcePath"] <- stringNode relationship.SourcePath
+        obj["field"] <- stringNode relationship.Field
+        obj["relation"] <- stringNode relationship.Relation
+
+        obj["authority"] <-
+            stringNode
+                (RelationAuthority.toWire relationship.Authority)
+
+        obj["rawTarget"] <- stringNode relationship.RawTarget
+
+        obj["referenceKind"] <-
+            stringNode
+                (ReferenceKind.toWire relationship.ReferenceKind)
+
+        obj["resolution"] <-
+            stringNode
+                (ResolutionStatus.toWire relationship.Resolution)
+
+        obj["targetKey"] <- optionalString relationship.TargetKey
+        obj["targetId"] <- optionalString relationship.TargetId
+
+        obj["targetSourcePath"] <-
+            optionalString relationship.TargetSourcePath
+
+        obj["targetTitle"] <- optionalString relationship.TargetTitle
+        obj
+
+    let private artifactNode
+        (relationships: Relationship list)
+        (artifact: Artifact)
+        : JsonObject =
+        let obj = JsonObject()
+        obj["key"] <- stringNode artifact.Key
+        obj["keyKind"] <- stringNode artifact.KeyKind
+        obj["id"] <- optionalString artifact.DeclaredId
+        obj["title"] <- stringNode artifact.Title
+        obj["titleSource"] <- stringNode artifact.TitleSource
+        obj["artifactType"] <- optionalString artifact.ArtifactType
+        obj["typeSource"] <- stringNode artifact.TypeSource
+        obj["project"] <- optionalString artifact.Project
+        obj["purposes"] <- stringArray artifact.Purposes
+        obj["audiences"] <- stringArray artifact.Audiences
+        obj["entryPoint"] <- boolNode artifact.EntryPoint
+        obj["entryPointOrder"] <- optionalNumber artifact.EntryPointOrder
+
+        obj["entryPointLabel"] <-
+            optionalString artifact.EntryPointLabel
+
+        obj["researchArea"] <- optionalString artifact.ResearchArea
+        obj["discipline"] <- stringArray artifact.Discipline
+        obj["summary"] <- optionalString artifact.Summary
+        obj["status"] <- optionalString artifact.Status
+        obj["version"] <- optionalString artifact.Version
+        obj["confidence"] <- optionalNumber artifact.Confidence
+        obj["completion"] <- optionalNumber artifact.Completion
+        obj["priority"] <- optionalString artifact.Priority
+        obj["authorAgent"] <- optionalString artifact.AuthorAgent
+        obj["created"] <- optionalString artifact.Created
+        obj["updated"] <- optionalString artifact.Updated
+        obj["tags"] <- stringArray artifact.Tags
+        obj["keywords"] <- stringArray artifact.Keywords
+
+        obj["relatedProjects"] <-
+            stringArray artifact.RelatedProjects
+
+        obj["bibliography"] <- stringArray artifact.Bibliography
+        obj["sourcePath"] <- stringNode artifact.SourcePath
+        obj["url"] <- stringNode artifact.CanonicalUrl
+        obj["legacyUrls"] <- stringArray artifact.LegacyUrls
+
+        obj["rawFrontmatter"] <-
+            artifact.FrontMatter.DeepClone()
+
+        obj["unknownFrontmatter"] <-
+            artifact.UnknownFrontMatter.DeepClone()
+
+        let relationArray = JsonArray()
+
+        for relationship in
+            relationships
+            |> List.filter (fun relationship ->
+                relationship.SourceKey = artifact.Key)
+        do
+            relationArray.Add(relationshipNode relationship)
+
+        obj["relationships"] <- relationArray
+        obj
+
+    let toJson (compilation: Compilation) : string =
+        let root = JsonObject()
+        root["schemaVersion"] <- stringNode "2.0"
+
+        let artifacts = JsonArray()
+
+        for artifact in compilation.Artifacts do
+            artifacts.Add(
+                artifactNode compilation.Relationships artifact
+            )
+
+        root["artifacts"] <- artifacts
+
+        let relationships = JsonArray()
+
+        for relationship in compilation.Relationships do
+            relationships.Add(relationshipNode relationship)
+
+        root["relationships"] <- relationships
+
+        let findings = JsonArray()
+
+        for finding in compilation.Findings do
+            findings.Add(findingNode finding)
+
+        root["findings"] <- findings
+
+        let capabilities = JsonArray()
+
+        for capability in compilation.Capabilities do
+            let obj = JsonObject()
+            obj["name"] <- stringNode capability.Name
+            obj["available"] <- boolNode capability.Available
+            obj["reason"] <- stringNode capability.Reason
+            capabilities.Add(obj)
+
+        root["capabilities"] <- capabilities
+
+        let redirects = JsonObject()
+
+        for oldUrl, newUrl in compilation.Redirects do
+            redirects[oldUrl] <- stringNode newUrl
+
+        root["redirects"] <- redirects
+
+        let options = JsonSerializerOptions()
+        options.WriteIndented <- true
+        root.ToJsonString(options)
+
+    let compileRepository
+        (repositoryRoot: string)
+        : Compilation =
+        let stateDirectory =
+            Path.Combine(repositoryRoot, ".research-publisher")
+
+        let inputPath =
+            Path.Combine(stateDirectory, "semantic-input.json")
+
+        let outputPath =
+            Path.Combine(stateDirectory, "semantic-output.json")
+
+        if not (File.Exists(inputPath)) then
+            invalidOp
+                (sprintf
+                    "Semantic compiler input is missing: %s"
+                    inputPath)
+
+        let parsed =
+            JsonNode.Parse(File.ReadAllText(inputPath))
+
+        let root =
+            match parsed with
+            | :? JsonObject as value -> value
+            | _ ->
+                invalidOp
+                    "Semantic compiler input root must be a JSON object."
+
+        let rawDocuments =
+            match root["documents"] with
+            | :? JsonArray as values ->
+                values
+                |> Seq.choose rawDocumentFromNode
+                |> Seq.toList
+            | _ -> []
+
+        let compilation =
+            Compiler.compile rawDocuments
+
+        Directory.CreateDirectory(stateDirectory)
+        |> ignore
+
+        File.WriteAllText(
+            outputPath,
+            toJson compilation
+        )
+
+        compilation
