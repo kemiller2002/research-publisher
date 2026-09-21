@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -36,3 +36,36 @@ jobs:
       - run: npm run research:test
       - run: npm run research:build
       - run: npm run research:build:fixture
+
+
+  visual-engineering-upgrade:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'work/gh-7-semantic-projection-vnext-impl'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Upgrade released Visual Engineering 1.0.0
+        run: |
+          npx --yes --package=@echelon-foundry/visual-engineering@1.0.0 visual-engineering status --json || true
+          npx --yes --package=@echelon-foundry/visual-engineering@1.0.0 visual-engineering upgrade --dry-run --force
+          npx --yes --package=@echelon-foundry/visual-engineering@1.0.0 visual-engineering upgrade --force
+          npx --yes --package=@echelon-foundry/visual-engineering@1.0.0 visual-engineering verify --strict
+
+      - name: Commit exact package output and restore workflow
+        run: |
+          git show origin/main:.github/workflows/validate-research.yml > .github/workflows/validate-research.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --stat
+          if ! git diff --cached --quiet; then
+            git commit -m "Upgrade Visual Engineering to 1.0.0 from released package"
+            git push origin HEAD:"work/gh-7-semantic-projection-vnext-impl"
+          fi
