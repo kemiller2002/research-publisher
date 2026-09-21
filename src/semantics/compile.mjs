@@ -29,11 +29,43 @@ function pathSlug(url) {
   return url.replace(/^\/(?:a|s)\//, "").replace(/\/$/, "");
 }
 
+async function loadDerivedRelationships(projectRoot) {
+  const relativePath = "research/frontier/frontier-graph.json";
+  const absolutePath = path.join(projectRoot, relativePath);
+
+  let graph;
+  try {
+    graph = JSON.parse(await fs.readFile(absolutePath, "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") return [];
+    throw new Error(`Unable to read derived relationship source ${relativePath}: ${error.message}`);
+  }
+
+  if (!Array.isArray(graph.edges)) {
+    throw new Error(`Derived relationship source ${relativePath} must contain an edges array.`);
+  }
+
+  return graph.edges
+    .filter((edge) =>
+      typeof edge?.from === "string"
+      && typeof edge?.to === "string"
+      && typeof edge?.type === "string"
+    )
+    .map((edge) => ({
+      sourceRef: edge.from,
+      targetRef: edge.to,
+      relation: edge.type,
+      evidenceSource: relativePath
+    }));
+}
+
 export async function compileSemanticCorpus({ projectRoot, parsedDocuments }) {
   const stateDirectory = path.join(projectRoot, ".research-publisher");
   await ensureDirectory(stateDirectory);
 
   const inputPath = path.join(stateDirectory, "semantic-input.json");
+  const derivedRelationships = await loadDerivedRelationships(projectRoot);
+
   await writeJson(inputPath, {
     schemaVersion: "1.0",
     documents: parsedDocuments.map((document) => ({
@@ -41,7 +73,8 @@ export async function compileSemanticCorpus({ projectRoot, parsedDocuments }) {
       frontmatter: document.frontmatter ?? {},
       excerpt: document.excerpt || null,
       headings: document.headings ?? []
-    }))
+    })),
+    derivedRelationships
   });
 
   const result = runLifecycle(["compile-semantics", "--repo", projectRoot], {

@@ -21,6 +21,12 @@ module Compiler =
           Excerpt: string option
           Headings: RawHeading list }
 
+    type RawDerivedRelationship =
+        { SourceRef: string
+          TargetRef: string
+          Relation: string
+          EvidenceSource: string }
+
     let private knownKeys =
         set
             [ "id"; "identifier"; "stableId"
@@ -645,6 +651,8 @@ module Compiler =
                         let relationship: Relationship =
                             { SourceKey = artifact.Key
                               SourcePath = artifact.SourcePath
+                              RawSource = None
+                              EvidenceSource = Some artifact.SourcePath
                               Field = field
                               Relation = spec.Relation
                               Authority = spec.Authority
@@ -695,6 +703,110 @@ module Compiler =
                                         "Use a declared artifact id or repository-relative path." }
                                 :: findings
                         | _ -> ()
+
+        List.rev relationships, List.rev findings
+
+    let private resolveDerivedRelationships
+        (artifacts: Artifact list)
+        (rawRelationships: RawDerivedRelationship list)
+        : Relationship list * Finding list =
+        let byId = Dictionary<string, Artifact>(StringComparer.Ordinal)
+        let byPath = Dictionary<string, Artifact>(StringComparer.Ordinal)
+
+        for artifact in artifacts do
+            match artifact.DeclaredId with
+            | Some id when not (byId.ContainsKey id) ->
+                byId[id] <- artifact
+            | _ -> ()
+
+            byPath[collapsePath artifact.SourcePath] <- artifact
+
+        let tryById (id: string) =
+            match byId.TryGetValue(id) with
+            | true, artifact -> Some artifact
+            | _ -> None
+
+        let tryByPath (path: string) =
+            match byPath.TryGetValue(collapsePath path) with
+            | true, artifact -> Some artifact
+            | _ -> None
+
+        let resolveEndpoint (reference: string) =
+            let value = reference.Trim()
+
+            if value.StartsWith("DOC:", StringComparison.Ordinal) then
+                let sourcePath = value.Substring(4)
+                RepoRelativePath, tryByPath sourcePath
+            else
+                match tryById value with
+                | Some artifact -> IdReference, Some artifact
+                | None ->
+                    if value.Contains("/") || value.EndsWith(".md", StringComparison.OrdinalIgnoreCase) then
+                        RepoRelativePath, tryByPath value
+                    else
+                        IdReference, None
+
+        let mutable relationships: Relationship list = []
+        let mutable findings: Finding list = []
+
+        for raw in rawRelationships do
+            let _, source = resolveEndpoint raw.SourceRef
+            let targetKind, target = resolveEndpoint raw.TargetRef
+
+            let status =
+                if source.IsSome && target.IsSome then
+                    Resolved
+                else
+                    Dangling
+
+            let sourceKey =
+                source
+                |> Option.map (fun artifact -> artifact.Key)
+                |> Option.defaultValue ("unresolved:" + raw.SourceRef)
+
+            let sourcePath =
+                source
+                |> Option.map (fun artifact -> artifact.SourcePath)
+                |> Option.defaultValue raw.EvidenceSource
+
+            let relationship =
+                { SourceKey = sourceKey
+                  SourcePath = sourcePath
+                  RawSource = Some raw.SourceRef
+                  EvidenceSource = Some raw.EvidenceSource
+                  Field = "derived-relationship"
+                  Relation = raw.Relation
+                  Authority = Derived
+                  RawTarget = raw.TargetRef
+                  ReferenceKind = targetKind
+                  Resolution = status
+                  TargetKey = target |> Option.map (fun artifact -> artifact.Key)
+                  TargetId = target |> Option.bind (fun artifact -> artifact.DeclaredId)
+                  TargetSourcePath = target |> Option.map (fun artifact -> artifact.SourcePath)
+                  TargetTitle = target |> Option.map (fun artifact -> artifact.Title) }
+
+            relationships <- relationship :: relationships
+
+            if status = Dangling then
+                let missing =
+                    [ if source.IsNone then yield "source " + raw.SourceRef
+                      if target.IsNone then yield "target " + raw.TargetRef ]
+                    |> String.concat ", "
+
+                findings <-
+                    { Code = "derived-relationship-unresolved"
+                      Severity = Warning
+                      SourcePath = raw.EvidenceSource
+                      FrontMatterKey = None
+                      Message =
+                        sprintf
+                            "Derived %s relationship could not resolve %s."
+                            raw.Relation
+                            missing
+                      Remedy =
+                        Some
+                            "Keep the generated graph and published artifact inventory aligned." }
+                    :: findings
 
         List.rev relationships, List.rev findings
 
@@ -824,8 +936,9 @@ module Compiler =
             Reason =
                 "Date coverage is insufficient and legacy publisher dates were fabricated; timeline projection remains disabled." } ]
 
-    let compile
+    let compileWithDerived
         (rawDocuments: RawDocument list)
+        (rawDerivedRelationships: RawDerivedRelationship list)
         : Compilation =
         let artifactsWithFindings =
             rawDocuments |> List.map artifactFromRaw
@@ -836,13 +949,20 @@ module Compiler =
         let initialFindings =
             artifactsWithFindings |> List.collect snd
 
-        let relationships, relationshipFindings =
+        let declaredRelationships, relationshipFindings =
             resolveReferences artifacts
+
+        let derivedRelationships, derivedFindings =
+            resolveDerivedRelationships artifacts rawDerivedRelationships
+
+        let relationships =
+            declaredRelationships @ derivedRelationships
 
         let findings =
             initialFindings
             @ duplicateFindings artifacts
             @ relationshipFindings
+            @ derivedFindings
             @ orphanFindings artifacts relationships
 
         let redirects =
@@ -864,3 +984,7 @@ module Compiler =
                 finding.SourcePath, finding.Code, finding.Message)
           Capabilities = capabilities artifacts
           Redirects = redirects }
+
+
+    let compile (rawDocuments: RawDocument list) : Compilation =
+        compileWithDerived rawDocuments []

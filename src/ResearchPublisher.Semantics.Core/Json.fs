@@ -110,6 +110,31 @@ module SemanticJson =
                       Headings = headings }
         | _ -> None
 
+    let private rawDerivedRelationshipFromNode
+        (node: JsonNode)
+        : Compiler.RawDerivedRelationship option =
+        match node with
+        | :? JsonObject as obj ->
+            let sourceRef = valueAsString "" obj["sourceRef"]
+            let targetRef = valueAsString "" obj["targetRef"]
+            let relation = valueAsString "" obj["relation"]
+            let evidenceSource = valueAsString "" obj["evidenceSource"]
+
+            if
+                String.IsNullOrWhiteSpace(sourceRef)
+                || String.IsNullOrWhiteSpace(targetRef)
+                || String.IsNullOrWhiteSpace(relation)
+                || String.IsNullOrWhiteSpace(evidenceSource)
+            then
+                None
+            else
+                Some
+                    { SourceRef = sourceRef
+                      TargetRef = targetRef
+                      Relation = relation
+                      EvidenceSource = evidenceSource }
+        | _ -> None
+
     let private findingNode (finding: Finding) : JsonObject =
         let obj = JsonObject()
         obj["code"] <- stringNode finding.Code
@@ -126,6 +151,8 @@ module SemanticJson =
         let obj = JsonObject()
         obj["sourceKey"] <- stringNode relationship.SourceKey
         obj["sourcePath"] <- stringNode relationship.SourcePath
+        obj["rawSource"] <- optionalString relationship.RawSource
+        obj["evidenceSource"] <- optionalString relationship.EvidenceSource
         obj["field"] <- stringNode relationship.Field
         obj["relation"] <- stringNode relationship.Relation
 
@@ -298,8 +325,18 @@ module SemanticJson =
                 |> Seq.toList
             | _ -> []
 
+        let rawDerivedRelationships =
+            match root["derivedRelationships"] with
+            | :? JsonArray as values ->
+                values
+                |> Seq.choose rawDerivedRelationshipFromNode
+                |> Seq.toList
+            | _ -> []
+
         let compilation =
-            Compiler.compile rawDocuments
+            Compiler.compileWithDerived
+                rawDocuments
+                rawDerivedRelationships
 
         Directory.CreateDirectory(stateDirectory)
         |> ignore

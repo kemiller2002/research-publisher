@@ -28,9 +28,20 @@ type Finding =
     { Code: string; Severity: Severity; SourcePath: string; FrontMatterKey: string option; Message: string; Remedy: string option }
 
 type Relationship =
-    { SourceKey: string; SourcePath: string; Field: string; Relation: string; Authority: RelationAuthority
-      RawTarget: string; ReferenceKind: ReferenceKind; Resolution: ResolutionStatus; TargetKey: string option
-      TargetId: string option; TargetSourcePath: string option; TargetTitle: string option }
+    { SourceKey: string
+      SourcePath: string
+      RawSource: string option
+      EvidenceSource: string option
+      Field: string
+      Relation: string
+      Authority: RelationAuthority
+      RawTarget: string
+      ReferenceKind: ReferenceKind
+      Resolution: ResolutionStatus
+      TargetKey: string option
+      TargetId: string option
+      TargetSourcePath: string option
+      TargetTitle: string option }
 
 type Artifact =
     { Key: string; KeyKind: string; DeclaredId: string option; Title: string; TitleSource: string

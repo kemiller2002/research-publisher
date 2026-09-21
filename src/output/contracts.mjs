@@ -63,7 +63,7 @@ function edgeRecord(relationship, byKey, config) {
     sourceUrl: source ? withBasePath(config.site.baseUrl, source.url) : null,
     targetUrl: target ? withBasePath(config.site.baseUrl, target.url) : null,
     evidence: {
-      sourcePath: relationship.sourcePath,
+      sourcePath: relationship.evidenceSource ?? relationship.sourcePath,
       field: relationship.field,
       rawTarget: relationship.rawTarget
     }
