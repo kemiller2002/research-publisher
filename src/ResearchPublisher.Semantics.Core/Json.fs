@@ -4,7 +4,7 @@ open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
-open System.Text.Json.Serialization.Metadata
+open System.Text
 
 module SemanticJson =
 
@@ -284,10 +284,12 @@ module SemanticJson =
 
         root["redirects"] <- redirects
 
-        let options = JsonSerializerOptions()
-        options.WriteIndented <- true
-        options.TypeInfoResolver <- DefaultJsonTypeInfoResolver()
-        root.ToJsonString(options)
+        use stream = new MemoryStream()
+        let writerOptions = JsonWriterOptions(Indented = true)
+        use writer = new Utf8JsonWriter(stream, writerOptions)
+        root.WriteTo(writer)
+        writer.Flush()
+        Encoding.UTF8.GetString(stream.ToArray())
 
     let compileRepository
         (repositoryRoot: string)
