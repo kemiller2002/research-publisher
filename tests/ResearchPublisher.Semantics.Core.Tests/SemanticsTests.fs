@@ -41,7 +41,7 @@ module SemanticsTests =
         let frontMatter =
             fm
                 [ "id", "RP-COMP-005"
-                  "document_type", "research-execution-package"
+                  "document_type", "research_execution_package"
                   "research_area", "Composition"
                   "author_agent", "agent-a" ]
 
@@ -243,3 +243,78 @@ module SemanticsTests =
                 finding.Code = "duplicate-id"
                 && finding.Severity = Blocking
         )
+
+
+    [<Fact>]
+    let snake_case_type_values_are_normalized_to_kebab_case () =
+        let result =
+            Compiler.compile
+                [ raw
+                    "research/report.md"
+                    (fm
+                        [ "id", "EX-COMP-011"
+                          "document_type", "experiment_report" ]) ]
+
+        let artifact = Assert.Single(result.Artifacts)
+        Assert.Equal(Some "experiment-report", artifact.ArtifactType)
+        Assert.Equal("front-matter:document_type", artifact.TypeSource)
+
+    [<Fact>]
+    let related_artifacts_are_preserved_without_inventing_relation_semantics () =
+        let source =
+            fmArray
+                "related_artifacts"
+                [ "TH-COMP-005"; "DF-COMP-002" ]
+
+        source["id"] <- JsonValue.Create<string>("RP-COMP-005")
+
+        let result =
+            Compiler.compile
+                [ raw "research/rp.md" source
+                  raw "research/th.md" (fm [ "id", "TH-COMP-005" ])
+                  raw "research/df.md" (fm [ "id", "DF-COMP-002" ]) ]
+
+        let relationships =
+            result.Relationships
+            |> List.filter (fun relationship ->
+                relationship.SourceKey = "RP-COMP-005")
+
+        Assert.Equal(2, relationships.Length)
+
+        Assert.All(
+            relationships,
+            fun relationship ->
+                Assert.Equal(
+                    DeclaredUnclassified,
+                    relationship.Authority
+                )
+
+                Assert.Equal(
+                    Resolved,
+                    relationship.Resolution
+                )
+
+                Assert.Equal(
+                    "related-artifact",
+                    relationship.Relation
+                )
+        )
+
+    [<Fact>]
+    let prerequisite_alias_is_canonical_and_resolvable () =
+        let source =
+            fmArray
+                "prerequisite"
+                [ "RP-COMP-005" ]
+
+        source["id"] <- JsonValue.Create<string>("EX-COMP-011")
+
+        let result =
+            Compiler.compile
+                [ raw "research/ex.md" source
+                  raw "research/rp.md" (fm [ "id", "RP-COMP-005" ]) ]
+
+        let relationship = Assert.Single(result.Relationships)
+        Assert.Equal(Canonical, relationship.Authority)
+        Assert.Equal("prerequisite", relationship.Relation)
+        Assert.Equal(Resolved, relationship.Resolution)
