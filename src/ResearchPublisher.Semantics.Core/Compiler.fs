@@ -221,12 +221,26 @@ module Compiler =
             let kind=if mode=ForceId then IdReference else classifyMixed raw
             let target,status =
                 match kind with
-                | IdReference -> match byIdTry raw with Some a -> Some a,Resolved | None -> None,Dangling
+                | IdReference ->
+                    match byIdTry raw with
+                    | Some a -> Some a, Resolved
+                    | None -> None, Dangling
                 | RepoRelativePath ->
-                    match byPathTry raw with Some a -> Some a,Resolved | None ->
-                        match byPathTry(directoryOf source+"/"+raw) with Some a -> Some a,Resolved | None -> None,Dangling
-                | FileRelativePath -> match byPathTry(directoryOf source+"/"+raw) with Some a -> Some a,Resolved | None -> None,Dangling
-                | BareFileName -> match byFile.TryGetValue(fileNameOf raw) with true,m when m.Count=1 -> Some m[0],Resolved | true,m when m.Count>1 -> None,Ambiguous | _ -> None,Dangling
+                    match byPathTry raw with
+                    | Some a -> Some a, Resolved
+                    | None ->
+                        match byPathTry (directoryOf source + "/" + raw) with
+                        | Some a -> Some a, Resolved
+                        | None -> None, Dangling
+                | FileRelativePath ->
+                    match byPathTry (directoryOf source + "/" + raw) with
+                    | Some a -> Some a, Resolved
+                    | None -> None, Dangling
+                | BareFileName ->
+                    match byFile.TryGetValue(fileNameOf raw) with
+                    | true, matches when matches.Count = 1 -> Some matches[0], Resolved
+                    | true, matches when matches.Count > 1 -> None, Ambiguous
+                    | _ -> None, Dangling
                 | ProseTitle -> None,NotALink
                 | Unparsed -> None,Dangling
             kind,target,status
