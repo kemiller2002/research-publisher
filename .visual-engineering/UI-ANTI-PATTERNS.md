@@ -1,3 +1,13 @@
+---
+project: visual-engineering
+purposes:
+  - apply
+  - reference
+audiences:
+  - practitioner
+  - contributor
+---
+
 # Visual Engineering UI Anti-Patterns
 
 - Generic containers used in place of a meaningful information model
