@@ -203,10 +203,9 @@ module SemanticJson =
         let relationArray = JsonArray()
 
         for relationship in
-            relationships
-            |> List.filter (fun relationship ->
-                relationship.SourceKey = artifact.Key)
-        do
+            (relationships
+             |> List.filter (fun relationship ->
+                 relationship.SourceKey = artifact.Key)) do
             relationArray.Add(relationshipNode relationship)
 
         obj["relationships"] <- relationArray
