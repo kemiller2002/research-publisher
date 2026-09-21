@@ -239,56 +239,172 @@ module SemanticJson =
         obj["relationships"] <- relationArray
         obj
 
+    let private writeOptionalString
+        (writer: Utf8JsonWriter)
+        (name: string)
+        (value: string option)
+        =
+        match value with
+        | Some text -> writer.WriteString(name, text)
+        | None -> writer.WriteNull(name)
+
+    let private writeOptionalNumber
+        (writer: Utf8JsonWriter)
+        (name: string)
+        (value: float option)
+        =
+        match value with
+        | Some number -> writer.WriteNumber(name, number)
+        | None -> writer.WriteNull(name)
+
+    let private writeStringArray
+        (writer: Utf8JsonWriter)
+        (name: string)
+        (values: string list)
+        =
+        writer.WriteStartArray(name)
+
+        for value in values do
+            writer.WriteStringValue(value)
+
+        writer.WriteEndArray()
+
+    let private writeFinding
+        (writer: Utf8JsonWriter)
+        (finding: Finding)
+        =
+        writer.WriteStartObject()
+        writer.WriteString("code", finding.Code)
+        writer.WriteString("severity", Severity.toWire finding.Severity)
+        writer.WriteString("sourcePath", finding.SourcePath)
+        writeOptionalString writer "frontMatterKey" finding.FrontMatterKey
+        writer.WriteString("message", finding.Message)
+        writeOptionalString writer "remedy" finding.Remedy
+        writer.WriteEndObject()
+
+    let private writeRelationship
+        (writer: Utf8JsonWriter)
+        (relationship: Relationship)
+        =
+        writer.WriteStartObject()
+        writer.WriteString("sourceKey", relationship.SourceKey)
+        writer.WriteString("sourcePath", relationship.SourcePath)
+        writeOptionalString writer "rawSource" relationship.RawSource
+        writeOptionalString writer "evidenceSource" relationship.EvidenceSource
+        writer.WriteString("field", relationship.Field)
+        writer.WriteString("relation", relationship.Relation)
+        writer.WriteString("authority", RelationAuthority.toWire relationship.Authority)
+        writer.WriteString("rawTarget", relationship.RawTarget)
+        writer.WriteString("referenceKind", ReferenceKind.toWire relationship.ReferenceKind)
+        writer.WriteString("resolution", ResolutionStatus.toWire relationship.Resolution)
+        writeOptionalString writer "targetKey" relationship.TargetKey
+        writeOptionalString writer "targetId" relationship.TargetId
+        writeOptionalString writer "targetSourcePath" relationship.TargetSourcePath
+        writeOptionalString writer "targetTitle" relationship.TargetTitle
+        writer.WriteEndObject()
+
+    let private writeArtifact
+        (writer: Utf8JsonWriter)
+        (relationships: Relationship list)
+        (artifact: Artifact)
+        =
+        writer.WriteStartObject()
+        writer.WriteString("key", artifact.Key)
+        writer.WriteString("keyKind", artifact.KeyKind)
+        writeOptionalString writer "id" artifact.DeclaredId
+        writer.WriteString("title", artifact.Title)
+        writer.WriteString("titleSource", artifact.TitleSource)
+        writeOptionalString writer "artifactType" artifact.ArtifactType
+        writer.WriteString("typeSource", artifact.TypeSource)
+        writeOptionalString writer "project" artifact.Project
+        writeStringArray writer "purposes" artifact.Purposes
+        writeStringArray writer "audiences" artifact.Audiences
+        writer.WriteBoolean("entryPoint", artifact.EntryPoint)
+        writeOptionalNumber writer "entryPointOrder" artifact.EntryPointOrder
+        writeOptionalString writer "entryPointLabel" artifact.EntryPointLabel
+        writeOptionalString writer "researchArea" artifact.ResearchArea
+        writeStringArray writer "discipline" artifact.Discipline
+        writeOptionalString writer "summary" artifact.Summary
+        writeOptionalString writer "status" artifact.Status
+        writeOptionalString writer "version" artifact.Version
+        writeOptionalNumber writer "confidence" artifact.Confidence
+        writeOptionalNumber writer "completion" artifact.Completion
+        writeOptionalString writer "priority" artifact.Priority
+        writeOptionalString writer "authorAgent" artifact.AuthorAgent
+        writeOptionalString writer "created" artifact.Created
+        writeOptionalString writer "updated" artifact.Updated
+        writeStringArray writer "tags" artifact.Tags
+        writeStringArray writer "keywords" artifact.Keywords
+        writeStringArray writer "relatedProjects" artifact.RelatedProjects
+        writeStringArray writer "bibliography" artifact.Bibliography
+        writer.WriteString("sourcePath", artifact.SourcePath)
+        writer.WriteString("url", artifact.CanonicalUrl)
+        writeStringArray writer "legacyUrls" artifact.LegacyUrls
+
+        writer.WritePropertyName("rawFrontmatter")
+        artifact.FrontMatter.WriteTo(writer)
+
+        writer.WritePropertyName("unknownFrontmatter")
+        artifact.UnknownFrontMatter.WriteTo(writer)
+
+        writer.WriteStartArray("relationships")
+
+        for relationship in relationships do
+            if relationship.SourceKey = artifact.Key then
+                writeRelationship writer relationship
+
+        writer.WriteEndArray()
+        writer.WriteEndObject()
+
     let toJson (compilation: Compilation) : string =
-        let root = JsonObject()
-        root["schemaVersion"] <- stringNode "2.0"
-
-        let artifacts = JsonArray()
-
-        for artifact in compilation.Artifacts do
-            artifacts.Add(
-                artifactNode compilation.Relationships artifact
-            )
-
-        root["artifacts"] <- artifacts
-
-        let relationships = JsonArray()
-
-        for relationship in compilation.Relationships do
-            relationships.Add(relationshipNode relationship)
-
-        root["relationships"] <- relationships
-
-        let findings = JsonArray()
-
-        for finding in compilation.Findings do
-            findings.Add(findingNode finding)
-
-        root["findings"] <- findings
-
-        let capabilities = JsonArray()
-
-        for capability in compilation.Capabilities do
-            let obj = JsonObject()
-            obj["name"] <- stringNode capability.Name
-            obj["available"] <- boolNode capability.Available
-            obj["reason"] <- stringNode capability.Reason
-            capabilities.Add(obj)
-
-        root["capabilities"] <- capabilities
-
-        let redirects = JsonObject()
-
-        for oldUrl, newUrl in compilation.Redirects do
-            redirects[oldUrl] <- stringNode newUrl
-
-        root["redirects"] <- redirects
-
         use stream = new MemoryStream()
         let writerOptions = JsonWriterOptions(Indented = true)
         use writer = new Utf8JsonWriter(stream, writerOptions)
-        root.WriteTo(writer)
+
+        writer.WriteStartObject()
+        writer.WriteString("schemaVersion", "2.0")
+
+        writer.WriteStartArray("artifacts")
+
+        for artifact in compilation.Artifacts do
+            writeArtifact writer compilation.Relationships artifact
+
+        writer.WriteEndArray()
+
+        writer.WriteStartArray("relationships")
+
+        for relationship in compilation.Relationships do
+            writeRelationship writer relationship
+
+        writer.WriteEndArray()
+
+        writer.WriteStartArray("findings")
+
+        for finding in compilation.Findings do
+            writeFinding writer finding
+
+        writer.WriteEndArray()
+
+        writer.WriteStartArray("capabilities")
+
+        for capability in compilation.Capabilities do
+            writer.WriteStartObject()
+            writer.WriteString("name", capability.Name)
+            writer.WriteBoolean("available", capability.Available)
+            writer.WriteString("reason", capability.Reason)
+            writer.WriteEndObject()
+
+        writer.WriteEndArray()
+
+        writer.WriteStartObject("redirects")
+
+        for oldUrl, newUrl in compilation.Redirects do
+            writer.WriteString(oldUrl, newUrl)
+
+        writer.WriteEndObject()
+        writer.WriteEndObject()
         writer.Flush()
+
         Encoding.UTF8.GetString(stream.ToArray())
 
     let private compileRoot (root: JsonObject) : Compilation =
