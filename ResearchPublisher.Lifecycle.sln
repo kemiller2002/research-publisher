@@ -9,11 +9,15 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ResearchPublisher.Lifecycle
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ResearchPublisher.Lifecycle.Cli", "src\ResearchPublisher.Lifecycle.Cli\ResearchPublisher.Lifecycle.Cli.fsproj", "{416AE6EE-8126-4C0E-BC2F-1D999D174458}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ResearchPublisher.Semantics.Core", "src\ResearchPublisher.Semantics.Core\ResearchPublisher.Semantics.Core.fsproj", "{6D46AE56-FF2C-4E1E-AC5C-EA0953359307}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F5DF1766-7BFB-479F-AB0B-53CA2CD3BB24}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ResearchPublisher.Lifecycle.Core.Tests", "tests\ResearchPublisher.Lifecycle.Core.Tests\ResearchPublisher.Lifecycle.Core.Tests.fsproj", "{0AF64B49-5673-4C90-900A-03EBEBB3D409}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ResearchPublisher.Lifecycle.Cli.Tests", "tests\ResearchPublisher.Lifecycle.Cli.Tests\ResearchPublisher.Lifecycle.Cli.Tests.fsproj", "{5455746D-C853-48E0-8D44-4C4C7950C972}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ResearchPublisher.Semantics.Core.Tests", "tests\ResearchPublisher.Semantics.Core.Tests\ResearchPublisher.Semantics.Core.Tests.fsproj", "{9E792E5B-F226-44FE-97A9-815F79954B7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
