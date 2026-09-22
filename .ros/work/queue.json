@@ -60,6 +60,22 @@
       "createdBy": "unknown",
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "GH-11",
+      "title": "Converge Research Publisher implementation baseline",
+      "description": null,
+      "tags": [
+        "readiness,bootstrap"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-09-22T22:12:08.462Z",
+      "updatedAt": "2026-09-22T22:12:08.000Z",
+      "createdBy": "agent:chatgpt",
+      "source": "github-issue",
+      "sourceReference": "https://github.com/kemiller2002/research-publisher/issues/11"
     }
   ]
 }
