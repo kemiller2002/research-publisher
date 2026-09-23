@@ -172,3 +172,11 @@ R8.3 Determinism, Limen boundary and URL preservation are CI gates.
 | Q2 | Do `RFR-` content-hash ids change when a source document is edited? (J.5) | advertising frontier URLs as permanent |
 | Q3 | Should the publisher consume `frontier-graph.json` directly, or re-derive from Markdown? | slice 2 |
 | Q4 | Is there a requirements draft outside the three inspected repositories? (E.0) | sign-off on this document |
+
+---
+
+## R13 — Shared Echelon application foundations
+
+The requirements in `docs/vnext/18-shared-application-foundations.md` are normative across this vNext requirement set.
+
+Research Publisher MUST use Aegis at applicable operational boundaries, Forma for interactive browser UI, and Folio whenever it emits or previews printable/PDF/paginated research documents. Static semantic HTML remains valid without WASM; the shared-capability document defines the ownership boundary and the evidence required for completion.
