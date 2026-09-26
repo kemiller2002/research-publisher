@@ -28,6 +28,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Adopt Praxis contract revision 1.1 and review findings (work item FEAT-ECHELON-PROVENANCE-R2)"
+    EXE-20260926T094828246Z-e419d230:
+      operations: [modified]
+      at: 2026-09-26T20:46:04.331Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Adopt Praxis contract revision 1.2 (work item FEAT-ECHELON-PROVENANCE-R3)"
 ---
 
 # Research Publisher vNext — Requirements v0.2.0
@@ -208,7 +218,7 @@ Research Publisher MUST use Aegis at applicable operational boundaries, Forma fo
 ## R14 — Provenance transport
 
 The requirements in `docs/vnext/19-provenance-transport-requirements.md`
-(`REQ-RP-PROV`, R14.1–R14.11) are normative across this requirement set and the
+(`REQ-RP-PROV`, R14.1–R14.14) are normative across this requirement set and the
 current publisher. They cite Praxis `RQ-ROS-2026-A008`, `RQ-ROS-2026-A009`,
 `RQ-ROS-2026-A015`, `RQ-ROS-2026-A019` and `DF-ROS-2026-A037` rather than
 restating them: the publisher carries valid provenance verbatim, carries another

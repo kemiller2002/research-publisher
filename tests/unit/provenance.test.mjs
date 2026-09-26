@@ -12,14 +12,18 @@ import {
   appendContribution,
   IDENTITY_ENVIRONMENT_VARIABLES,
   classify,
+  classifyText,
   emptyBlock,
+  keyFromEnvelopeV1,
   originator,
   preservationViolations,
   withRole
 } from "../../src/vendor/praxis/provenance-interchange.mjs";
 import {
   SELF_DECLARED_UNVERIFIED,
+  asciiTrim,
   describeProvenance,
+  describeProvenanceText,
   provenanceDiagnostics,
   toInterchangeBlock
 } from "../../src/metadata/provenance.mjs";
@@ -64,7 +68,7 @@ describe("vendored Praxis contract", () => {
 
   it("fixtures are byte-identical to the pinned Praxis commit", () => {
     const source = readJson(path.join(fixtureDirectory, "SOURCE.json"));
-    expect(source.commit).toBe("c2657efb4d54f11d0fd0617cc1bcd5b8418601d5");
+    expect(source.commit).toBe("b0037183389c8b9392919f58521b9487d1b4d5c6");
     for (const [file, hash] of Object.entries(source.files)) {
       expect(sha256(path.join(fixtureDirectory, file)), file).toBe(hash);
     }
@@ -72,14 +76,14 @@ describe("vendored Praxis contract", () => {
 
   it("the reference library is byte-identical to the pinned Praxis commit", () => {
     const source = readJson(path.join(vendorDirectory, "SOURCE.json"));
-    expect(source.commit).toBe("c2657efb4d54f11d0fd0617cc1bcd5b8418601d5");
+    expect(source.commit).toBe("b0037183389c8b9392919f58521b9487d1b4d5c6");
     for (const [file, hash] of Object.entries(source.files)) {
       expect(sha256(path.join(vendorDirectory, file)), file).toBe(hash);
     }
   });
 
-  it("has all 56 conformance cases (contract revision 1.1)", () => {
-    expect(cases).toHaveLength(56);
+  it("has all 70 conformance cases (contract revision 1.2)", () => {
+    expect(cases).toHaveLength(70);
   });
 
   it("the vendored identity-environment list matches the vendored library", () => {
@@ -167,7 +171,9 @@ describe("normalization preserves provenance", () => {
     const { schema: _schema, ...frontMatterBlock } = block;
     const record = normalized({ id: "EV-2026-001", provenance: frontMatterBlock, derived_from: ["EV-2026-000"] });
     const published = JSON.parse(JSON.stringify(createPublicCatalog([record], { site: { title: "t", baseUrl: "/" } }).records[0]));
-    const interchange = toInterchangeBlock(published);
+    const result = toInterchangeBlock(published);
+    expect(result.ok, result.error).toBe(true);
+    const interchange = result.block;
 
     expect(interchange).toEqual({ ...block, derivedFrom: ["EV-2026-000"] });
     expect(classify(interchange).verdict).toBe("supported");
@@ -209,7 +215,7 @@ describe("normalization preserves provenance", () => {
     expect(record.provenanceStatus.verdict).toBe("unsupported");
     expect(record.provenanceStatus.schema).toBe("praxis.provenance/2");
     expect(record.derivedFrom).toEqual([]);
-    expect(toInterchangeBlock(record)).toEqual(block);
+    expect(toInterchangeBlock(record)).toEqual({ ok: true, block });
     expect(provenanceDiagnostics(record)).toMatchObject([{ severity: "warning", code: "unsupported-provenance-version" }]);
   });
 
@@ -268,7 +274,7 @@ describe("legacy records", () => {
     ]);
     expect(record.provenance).toBeNull();
     expect(record.provenanceStatus).toBeNull();
-    expect(toInterchangeBlock(record)).toBeNull();
+    expect(toInterchangeBlock(record)).toEqual({ ok: true, block: null });
   });
 
   it("leaves an artifact without provenance unattributed and does not fabricate dates", () => {
@@ -313,7 +319,10 @@ describe("lineage", () => {
         expect(next.ok, next.error).toBe(true);
         return { ...records, [step.record]: next.block };
       }
-      return { ...records, [step.record]: addLineage(current, step.lineage) };
+      // Contract 1.2: addLineage returns a result; a refusal must never be dropped.
+      const next = addLineage(current, step.lineage);
+      expect(next.ok, next.error).toBe(true);
+      return { ...records, [step.record]: next.block };
     }, {});
     const documents = Object.entries(blocks).map(([id, block], index) =>
       normalized({ id, title: id, provenance: block }, `research/chain-${index}.md`)
@@ -423,10 +432,10 @@ describe("contract revision 1.1 and review findings", () => {
     expect(normalized({ id: "E", derived_from: ["EV-1", "EV-2"] }).derivedFrom).toEqual(["EV-1", "EV-2"]);
   });
 
-  it("the catalog and record schema versions are 1.2 and the graph is 1.1", () => {
+  it("the catalog and record schema versions are 1.3 and the graph is 1.1", () => {
     const record = normalized({ id: "E" });
-    expect(record.schemaVersion).toBe("1.2");
-    expect(createPublicCatalog([record], { site: { title: "t", baseUrl: "/" } }).schemaVersion).toBe("1.2");
+    expect(record.schemaVersion).toBe("1.3");
+    expect(createPublicCatalog([record], { site: { title: "t", baseUrl: "/" } }).schemaVersion).toBe("1.3");
     expect(buildRelationshipGraph([record]).schemaVersion).toBe("1.1");
   });
 });
@@ -506,6 +515,28 @@ describe("build pipeline", () => {
     expect(diagnostics.some((item) => item.severity === "error")).toBe(false);
   });
 
+  it("withholds duplicate-key JSON provenance and refused lineage visibly in the build (contract 1.2)", async () => {
+    const contribution = '{"operations":["created"],"at":"2026-09-26T08:00:00.000Z","actor":{"kind":"human","id":"%s"}}';
+    const directory = temporaryProject({
+      "research/EV-2026-001-source.md": "---\nid: EV-2026-001\ntitle: Source\n---\n\n# Source\n",
+      "research/EV-2026-002-json.md": `---json\n{"id":"EV-2026-002","title":"Json","derived_from":["EV-2026-001"],"provenance":{"contributions":{"EXE-A":${contribution.replace("%s", "mallory")},"EXE-A":${contribution.replace("%s", "alice")}}}}\n---\n\n# Json\n`,
+      "research/EV-2026-003-refused.md": "---\nid: EV-2026-003\ntitle: Refused\nderived_from: [EV-2026-001, \" \"]\n---\n\n# Refused\n"
+    });
+
+    const { diagnostics, catalog, graph } = await validateProject(directory);
+    const byId = new Map(catalog.records.map((record) => [record.id, record]));
+
+    expect(byId.get("EV-2026-002").provenanceWithheld).toBe(true);
+    expect(JSON.stringify(byId.get("EV-2026-002"))).not.toContain("mallory");
+    expect(byId.get("EV-2026-002").derivedFrom).toEqual(["EV-2026-001"]);
+    expect(byId.get("EV-2026-003").lineageWithheld).toBe(true);
+    expect(byId.get("EV-2026-003").derivedFrom).toEqual([]);
+    expect(graph.edges).toEqual([{ source: "EV-2026-002", target: "EV-2026-001", type: "derived-from" }]);
+    expect(diagnostics).toContainEqual(expect.objectContaining({ code: "malformed-provenance", sourcePath: "research/EV-2026-002-json.md" }));
+    expect(diagnostics).toContainEqual(expect.objectContaining({ code: "rejected-lineage", severity: "warning", sourcePath: "research/EV-2026-003-refused.md" }));
+    expect(diagnostics.some((item) => item.severity === "error")).toBe(false);
+  });
+
   it("is unaffected for a repository with no provenance", async () => {
     const directory = temporaryProject({
       "research/EV-2026-001-plain.md": "---\nid: EV-2026-001\ntitle: Plain\nauthor_agent: codex\n---\n\n# Plain\n",
@@ -516,8 +547,8 @@ describe("build pipeline", () => {
 
     expect(catalog.records).toHaveLength(2);
     expect(catalog.records.every((record) => record.provenance === null && record.provenanceStatus === null && record.provenanceWithheld === false)).toBe(true);
-    expect(catalog.schemaVersion).toBe("1.2");
-    expect(catalog.records.every((record) => record.schemaVersion === "1.2")).toBe(true);
+    expect(catalog.schemaVersion).toBe("1.3");
+    expect(catalog.records.every((record) => record.schemaVersion === "1.3")).toBe(true);
     expect(catalog.records.every((record) => record.created === null && record.updated === null)).toBe(true);
     expect(diagnostics.filter((item) => item.code.includes("provenance"))).toEqual([]);
   });
@@ -530,5 +561,205 @@ describe("build pipeline", () => {
     expect(catalog.records[0].provenance).toEqual(block);
     expect(catalog.records[0].derivedFrom).toEqual(["EV-2026-000"]);
     expect(catalog.records[0].url.startsWith("/base/")).toBe(true);
+  });
+});
+
+describe("contract revision 1.2", () => {
+  const textCases = readJson(path.join(fixtureDirectory, "text-cases.json")).cases;
+  const lineageCases = readJson(path.join(fixtureDirectory, "lineage-cases.json")).cases;
+  const envelopeKeyCases = readJson(path.join(fixtureDirectory, "envelope-key-cases.json")).cases;
+  const entry = { operations: ["created"], at: "2026-09-26T08:00:00.000Z", actor: H };
+  const secret = "ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  const isJson = (text) => {
+    try {
+      JSON.parse(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  function projectWith(files) {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "rp-prov-12-"));
+    for (const [file, contents] of Object.entries(files)) {
+      fs.mkdirSync(path.dirname(path.join(directory, file)), { recursive: true });
+      fs.writeFileSync(path.join(directory, file), contents);
+    }
+    return directory;
+  }
+  /** A document whose front matter is JSON text (`---json`), read through the real parser. */
+  async function jsonDocument(frontmatterJson) {
+    const directory = projectWith({ "research/a.md": `---json\n${frontmatterJson}\n---\n\n# A\n` });
+    return normalizeDocument(await parseDocument(directory, "research/a.md"));
+  }
+
+  it("has 14 text cases, 8 lineage cases and 12 envelope-key cases", () => {
+    expect(textCases).toHaveLength(14);
+    expect(lineageCases).toHaveLength(8);
+    expect(envelopeKeyCases).toHaveLength(12);
+  });
+
+  for (const item of textCases) {
+    it(`text case: ${item.name} is ${item.expect} (vendored classifyText and publisher, never throwing)`, () => {
+      expect(classifyText(item.text).verdict).toBe(item.expect);
+      const described = describeProvenanceText(item.text);
+      expect(described.provenanceStatus.verdict).toBe(item.expect);
+      expect(described.provenanceWithheld).toBe(item.expect === "malformed");
+      expect("provenance" in described).toBe(item.expect !== "malformed");
+    });
+
+    if (isJson(item.text)) {
+      it(`text case through JSON front matter: ${item.name} is ${item.expect}`, async () => {
+        const record = await jsonDocument(`{"id":"EV-2026-001","title":"A","provenance":${item.text}}`);
+        expect(record.provenanceStatus.verdict).toBe(item.expect);
+        expect(record.provenanceWithheld).toBe(item.expect === "malformed");
+        expect("provenance" in record).toBe(item.expect !== "malformed");
+      });
+    }
+  }
+
+  for (const item of lineageCases) {
+    it(`lineage case: ${item.name} is ${item.ok ? "added" : "refused"}`, () => {
+      const result = addLineage(item.block, item.references);
+      expect(result.ok, result.error).toBe(item.ok);
+      if (item.ok) {
+        expect(result.block.derivedFrom).toEqual(item.derivedFrom);
+      }
+      if (classify(item.block).verdict === "supported") {
+        // The publisher's lineage goes through the same check.
+        const record = normalized({ id: "EV-2026-001", provenance: item.block, derived_from: item.references });
+        expect(record.lineageWithheld).toBe(!item.ok);
+        expect(record.derivedFrom).toEqual(item.ok ? item.derivedFrom : []);
+        expect(provenanceDiagnostics(record).some((diagnostic) => diagnostic.code === "rejected-lineage")).toBe(!item.ok);
+      }
+    });
+  }
+
+  // The publisher derives no contribution keys (it never receives envelopes); the cases
+  // pin that the vendored library it classifies with is the revision-1.2 one.
+  for (const item of envelopeKeyCases) {
+    it(`envelope key case (vendored library): ${item.name}`, () => {
+      const envelope = item.envelopeText === undefined ? item.envelope : JSON.parse(item.envelopeText);
+      if (item.error) {
+        expect(() => keyFromEnvelopeV1(envelope)).toThrow();
+      } else {
+        expect(keyFromEnvelopeV1(envelope)).toBe(item.key);
+      }
+    });
+  }
+
+  it("JSON front matter: a repeated contribution key cannot smuggle an originator (review finding 5)", async () => {
+    const mallory = JSON.stringify({ operations: ["created"], at: "2026-09-26T08:00:00.000Z", actor: { kind: "human", id: "mallory" } });
+    const alice = JSON.stringify({ operations: ["modified"], at: "2026-09-26T09:00:00.000Z", actor: { kind: "human", id: "alice" } });
+    const record = await jsonDocument(`{"id":"EV-2026-001","provenance":{"schema":"praxis.provenance/1","contributions":{"EXE-A":${mallory},"EXE-A":${alice}}}}`);
+
+    expect("provenance" in record).toBe(false);
+    expect(record.provenanceWithheld).toBe(true);
+    expect(record.provenanceStatus.problems.join(" ")).toContain("member name repeated");
+    expect(provenanceDiagnostics(record)).toMatchObject([{ code: "malformed-provenance", severity: "warning" }]);
+  });
+
+  it("JSON front matter: a repeated top-level provenance member is malformed, not last-one-wins", async () => {
+    const block = JSON.stringify({ contributions: { "EXE-1": entry } });
+    const record = await jsonDocument(`{"id":"EV-2026-001","provenance":${block},"provenance":${block}}`);
+
+    expect(record.provenanceWithheld).toBe(true);
+    expect(record.provenanceStatus.problems).toEqual(["provenance: member name repeated within one object"]);
+  });
+
+  it("JSON front matter: an unpaired surrogate is malformed, whatever the major version (review finding 10)", async () => {
+    const v1 = await jsonDocument(`{"id":"E","provenance":{"contributions":{"EXE-1":{"operations":["created"],"at":"2026-09-26T08:00:00.000Z","actor":{"kind":"human","id":"kevin"},"reason":"\\ud800"}}}}`);
+    const v2 = await jsonDocument(`{"id":"E","provenance":{"schema":"praxis.provenance/2","x-a":"\\ud800"}}`);
+
+    expect(v1.provenanceWithheld).toBe(true);
+    expect(v2.provenanceWithheld).toBe(true);
+    expect(v2.provenanceStatus.verdict).toBe("malformed");
+    // An already-parsed block with a lone surrogate is malformed too.
+    expect(describeProvenance({ schema: "praxis.provenance/2", "x-a": "\ud800" }).provenanceWithheld).toBe(true);
+  });
+
+  it("JSON front matter: a stored `provenance: null` is malformed; an absent member is unattributed", async () => {
+    const declaredNull = await jsonDocument(`{"id":"E","provenance":null}`);
+    const absent = await jsonDocument(`{"id":"E"}`);
+
+    expect(declaredNull.provenanceWithheld).toBe(true);
+    expect("provenance" in declaredNull).toBe(false);
+    expect(absent.provenance).toBeNull();
+    expect(absent.provenanceWithheld).toBe(false);
+  });
+
+  it("JSON front matter: a valid block and its lineage are carried verbatim", async () => {
+    const block = { schema: "praxis.provenance/1", contributions: { "EXE-1": entry }, "x-note": { kept: true } };
+    const record = await jsonDocument(JSON.stringify({ id: "EV-2026-001", provenance: block, derived_from: ["EV-2026-000"] }));
+
+    expect(record.provenance).toEqual(block);
+    expect(record.derivedFrom).toEqual(["EV-2026-000"]);
+    expect(record.lineageWithheld).toBe(false);
+  });
+
+  it("JSON front matter: a repeated derived_from member withholds lineage visibly", async () => {
+    const record = await jsonDocument(`{"id":"E","derived_from":["EV-1"],"derived_from":["EV-2"]}`);
+
+    expect(record.derivedFrom).toEqual([]);
+    expect(record.lineageWithheld).toBe(true);
+    expect(record.lineageProblems).toEqual(["derived_from: member name repeated within one object"]);
+  });
+
+  it("a credential in derived_from never reaches the catalog, the graph, or the interchange block (review findings 1-2)", () => {
+    const source = normalized({ id: "EV-2026-000", title: "Source" }, "research/source.md");
+    const record = normalized({ id: "EV-2026-001", provenance: { contributions: { "EXE-1": entry } }, derived_from: ["EV-2026-000", secret] }, "research/a.md");
+    const catalog = JSON.stringify(createPublicCatalog([source, record], { site: { title: "t", baseUrl: "/" } }));
+    const diagnostics = provenanceDiagnostics(record);
+
+    expect(record.lineageWithheld).toBe(true);
+    expect(record.derivedFrom).toEqual([]);
+    expect(record.lineageProblems.join(" ")).toContain("credential-like value");
+    expect(catalog).not.toContain(secret);
+    expect(buildRelationshipGraph([source, record]).edges).toEqual([]);
+    expect(diagnostics).toMatchObject([{ code: "rejected-lineage", severity: "warning" }]);
+    expect(JSON.stringify(diagnostics)).not.toContain(secret);
+    const interchange = toInterchangeBlock(record);
+    expect(interchange.ok).toBe(false);
+    expect(interchange.error).not.toContain(secret);
+    // The block itself is still valid and carried.
+    expect(record.provenanceStatus.verdict).toBe("supported");
+  });
+
+  it("lineage of an unattributed record goes through the same check", () => {
+    const refused = normalized({ id: "E", derived_from: secret });
+    const kept = normalized({ id: "E", derived_from: ["EV-1", "EV-1", "EV-2"] });
+
+    expect(refused.lineageWithheld).toBe(true);
+    expect(refused.provenance).toBeNull();
+    expect(kept.derivedFrom).toEqual(["EV-1", "EV-2"]);
+    expect(kept.lineageWithheld).toBe(false);
+  });
+
+  it("blank, null, and non-string lineage references are refused visibly, never filtered out", () => {
+    for (const references of [[" \t"], [""], ["EV-1", null], [7], [{ id: "EV-1" }]]) {
+      const record = normalized({ id: "E", derived_from: references });
+      expect(record.lineageWithheld, JSON.stringify(references)).toBe(true);
+      expect(provenanceDiagnostics(record).map((item) => item.code), JSON.stringify(references)).toEqual(["rejected-lineage"]);
+    }
+  });
+
+  it("ASCII whitespace only: U+0085, U+FEFF, U+001C and U+00A0 are content (rule 2)", () => {
+    for (const character of ["\u0085", "﻿", "\u001c", " "]) {
+      expect(normalized({ id: "E", derived_from: [character] }).derivedFrom).toEqual([character]);
+      expect(normalized({ id: "E", author: character }).selfDeclaredAuthors.map((item) => item.value)).toEqual([character]);
+      expect(asciiTrim(`\t ${character} \r\n`)).toBe(character);
+    }
+    expect(normalized({ id: "E", author: " \t\v\f " }).selfDeclaredAuthors).toEqual([]);
+    const withId = (id) => normalized({ id: "E", provenance: { contributions: { "EXE-1": { ...entry, actor: { kind: "human", id } } } } });
+    expect(withId("\u0085").provenanceStatus.verdict).toBe("supported");
+    expect(withId(" \t").provenanceWithheld).toBe(true);
+  });
+
+  it("the credential patterns are ASCII-only (rule 2)", () => {
+    const withReason = (reason) => normalized({ id: "E", provenance: { contributions: { "EXE-1": { ...entry, reason } } } });
+    expect(withReason("ébearer abcdefghijklmnop0123").provenanceWithheld).toBe(true);
+    expect(withReason(`bearer ${"K".repeat(20)}`).provenanceStatus.verdict).toBe("supported");
+    expect(withReason("bearer\u0085abcdefghijklmnop0123").provenanceStatus.verdict).toBe("supported");
+    expect(withReason("Bearer\tabcdefghijklmnop0123").provenanceWithheld).toBe(true);
   });
 });

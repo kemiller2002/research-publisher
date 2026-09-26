@@ -2,7 +2,7 @@
 
 ## Canonical Fields
 
-The publisher normalizes front matter into a versioned `1.2` record (catalog `schemaVersion` 1.2; relationship graph 1.1) with these core fields:
+The publisher normalizes front matter into a versioned `1.3` record (catalog `schemaVersion` 1.3; relationship graph 1.1) with these core fields:
 
 - `schemaVersion`
 - `id`
@@ -40,6 +40,8 @@ The publisher normalizes front matter into a versioned `1.2` record (catalog `sc
 - `provenanceStatus`
 - `provenanceWithheld`
 - `derivedFrom`
+- `lineageWithheld`
+- `lineageProblems`
 - `selfDeclaredAuthors`
 - `headings`
 - `sourcePath`
@@ -94,12 +96,23 @@ The publisher carries Praxis provenance; it does not define it. See
   block's own `derivedFrom`). A scalar is one reference; only a list holds
   several. Lineage is not authorship. References to published
   documents also become `derived-from` edges in the relationship graph.
+  Every reference passes the Praxis `addLineage` check; a credential, blank,
+  non-string or null reference withholds the lineage (see below).
+- `lineageWithheld`: `true` when the lineage was refused; `derivedFrom` is then
+  `[]`, no graph edge is produced, and the build reports a `rejected-lineage`
+  warning.
+- `lineageProblems`: why the lineage was refused (never the refused values);
+  `[]` otherwise.
 - `selfDeclaredAuthors`: legacy free-text author fields (`authorAgent`,
   `author`, `author_agent`, `created_by_agent`, `owner_agent`,
   `source_author`) as `{field, value, status: "self-declared-unverified"}`.
   A scalar is one claim (`"Doe, Jane"` stays one author). They are never
   converted into structured provenance.
 
+JSON front matter (`---json`) is classified as JSON text: a repeated member
+name or an unpaired surrogate in `provenance` makes it malformed and withheld.
+
+Version 1.3 (from 1.2) adds `lineageWithheld` and `lineageProblems`.
 Version 1.2 (from 1.1) adds these fields and makes absent `created` / `updated`
 `null` instead of a substituted date; consumers must handle `null` dates.
 

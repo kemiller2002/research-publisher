@@ -225,7 +225,7 @@ function createGuides(documents) {
 
 export function createPublicCatalog(documents, config) {
   return {
-    schemaVersion: "1.2",
+    schemaVersion: "1.3",
     generatedOn: "2026-07-22",
     project: config.site.title,
     records: documents.map((document) => ({
@@ -319,7 +319,7 @@ export async function buildProject({ engineRoot, projectRoot, config, mode = "bu
   const dataDirectory = path.join(internalDirectory, "data");
   await ensureDirectory(dataDirectory);
   const internalCatalog = {
-    schemaVersion: "1.2",
+    schemaVersion: "1.3",
     generatedOn: "2026-07-22",
     project: config.site.title,
     records: normalized
