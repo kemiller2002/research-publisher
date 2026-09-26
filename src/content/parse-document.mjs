@@ -64,6 +64,7 @@ export async function parseDocument(projectRoot, relativePath) {
     absolutePath,
     relativePath,
     frontmatter: parsed.data ?? {},
+    frontmatterText: parsed.matter ?? "",
     excerpt: parsed.excerpt ?? "",
     body: parsed.content,
     raw,

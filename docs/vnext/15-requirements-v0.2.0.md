@@ -4,8 +4,20 @@ title: Research Publisher vNext Requirements
 version: 0.2.0
 status: draft
 created: 2026-09-17
-updated: 2026-09-17
+updated: 2026-09-26
 supersedes: input-documents/research-publisher-vnext-requirements.txt (unversioned draft, 550b1b9)
+provenance:
+  contributions:
+    EXE-20260926T081158655Z-e537f193:
+      operations: [modified]
+      at: 2026-09-26T08:16:40.047Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Add R14 provenance transport section (work item FEAT-ECHELON-PROVENANCE)"
 ---
 
 # Research Publisher vNext — Requirements v0.2.0
@@ -180,3 +192,16 @@ R8.3 Determinism, Limen boundary and URL preservation are CI gates.
 The requirements in `docs/vnext/18-shared-application-foundations.md` are normative across this vNext requirement set.
 
 Research Publisher MUST use Aegis at applicable operational boundaries, Forma for interactive browser UI, and Folio whenever it emits or previews printable/PDF/paginated research documents. Static semantic HTML remains valid without WASM; the shared-capability document defines the ownership boundary and the evidence required for completion.
+
+---
+
+## R14 — Provenance transport
+
+The requirements in `docs/vnext/19-provenance-transport-requirements.md`
+(`REQ-RP-PROV`, R14.1–R14.10) are normative across this requirement set and the
+current publisher. They cite Praxis `RQ-ROS-2026-A008`, `RQ-ROS-2026-A009`,
+`RQ-ROS-2026-A015`, `RQ-ROS-2026-A019` and `DF-ROS-2026-A037` rather than
+restating them: the publisher carries valid provenance verbatim, carries another
+major version verbatim and flagged, rejects malformed provenance with a visible
+warning, keeps lineage (`derived_from`) separate from authorship, and publishes
+legacy author fields only as self-declared, unverified claims.

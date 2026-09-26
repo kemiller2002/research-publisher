@@ -1,4 +1,5 @@
 import { audienceVocabulary, documentPurposeVocabulary } from "../metadata/normalize.mjs";
+import { provenanceDiagnostics } from "../metadata/provenance.mjs";
 
 const allowedPurposes = new Set(documentPurposeVocabulary);
 const allowedAudiences = new Set(audienceVocabulary);
@@ -79,6 +80,8 @@ export function validateDocuments(documents) {
         });
       }
     }
+
+    diagnostics.push(...provenanceDiagnostics(document));
 
     if (document.entryPoint && !document.project) {
       diagnostics.push({

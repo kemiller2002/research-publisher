@@ -63,7 +63,9 @@ describe("documentation and CLI agree", () => {
       expect(result.status, `${command} --help should succeed`).toBe(0);
       expect(result.stdout).toContain(command);
     }
-  });
+    // Spawns the CLI once per command (~5 s in total), which exceeded the default
+    // 5 s timeout under parallel suite load.
+  }, 60000);
 
   it("the exit codes in help, the README and the command reference match", () => {
     const documented = [

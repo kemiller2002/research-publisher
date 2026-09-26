@@ -35,6 +35,13 @@ describe("integration build", () => {
     expect(projectHtml).toContain("guided starting point");
     expect(projectHtml).toContain("Start here");
     expect(result.catalog.records[0].url.startsWith(config.site.baseUrl)).toBe(true);
+    // R14.1/R14.5: recorded provenance and lineage reach the published catalog verbatim.
+    const publicCatalog = JSON.parse(await fs.readFile(path.join(workspaceRoot, "dist/data/research-catalog.json"), "utf8"));
+    const provenanceRequirements = publicCatalog.records.find((record) => record.id === "REQ-RP-PROV");
+    expect(provenanceRequirements.provenanceStatus.verdict).toBe("supported");
+    expect(Object.values(provenanceRequirements.provenance.contributions)[0].operations).toEqual(["created"]);
+    expect(provenanceRequirements.derivedFrom).toEqual(["RQ-ROS-2026-A015"]);
+    expect(publicCatalog.records.filter((record) => record.provenanceStatus?.verdict === "malformed")).toEqual([]);
     const indexHtml = await fs.readFile(path.join(workspaceRoot, "dist/index.html"), "utf8");
     expect(indexHtml).toContain("Build:");
     expect(indexHtml).toMatch(/Build:\s*<time datetime="[^"]+">/);

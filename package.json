@@ -43,6 +43,7 @@
     "src/metadata",
     "src/relationships",
     "src/validation",
+    "src/vendor",
     "site/src",
     "site/astro.config.mjs",
     "site/package.json",

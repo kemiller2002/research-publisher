@@ -56,5 +56,10 @@ describe("normalizeDocument", () => {
     expect(document.purposes).toEqual([]);
     expect(document.audiences).toEqual([]);
     expect(document.entryPoint).toBe(false);
+    // Absent data stays absent (R2.1, R14.9): no fabricated dates or provenance.
+    expect(document.created).toBeNull();
+    expect(document.updated).toBeNull();
+    expect(document.provenance).toBeNull();
+    expect(document.derivedFrom).toEqual([]);
   });
 });

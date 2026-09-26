@@ -223,7 +223,7 @@ function createGuides(documents) {
     }, {});
 }
 
-function createPublicCatalog(documents, config) {
+export function createPublicCatalog(documents, config) {
   return {
     schemaVersion: "1.1",
     generatedOn: "2026-07-22",
