@@ -183,7 +183,7 @@ export function normalizeDocument(parsed) {
   const contentHash = crypto.createHash("sha256").update(parsed.body).digest("hex");
 
   return {
-    schemaVersion: "1.1",
+    schemaVersion: "1.2",
     id,
     title,
     slug,

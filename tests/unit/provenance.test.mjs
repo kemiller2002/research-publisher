@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import {
   addLineage,
   appendContribution,
+  IDENTITY_ENVIRONMENT_VARIABLES,
   classify,
   emptyBlock,
   originator,
@@ -63,7 +64,7 @@ describe("vendored Praxis contract", () => {
 
   it("fixtures are byte-identical to the pinned Praxis commit", () => {
     const source = readJson(path.join(fixtureDirectory, "SOURCE.json"));
-    expect(source.commit).toBe("a42c44e8ae0e6e16fdd513141460b700e5fa6648");
+    expect(source.commit).toBe("c2657efb4d54f11d0fd0617cc1bcd5b8418601d5");
     for (const [file, hash] of Object.entries(source.files)) {
       expect(sha256(path.join(fixtureDirectory, file)), file).toBe(hash);
     }
@@ -71,14 +72,22 @@ describe("vendored Praxis contract", () => {
 
   it("the reference library is byte-identical to the pinned Praxis commit", () => {
     const source = readJson(path.join(vendorDirectory, "SOURCE.json"));
-    expect(source.commit).toBe("a42c44e8ae0e6e16fdd513141460b700e5fa6648");
+    expect(source.commit).toBe("c2657efb4d54f11d0fd0617cc1bcd5b8418601d5");
     for (const [file, hash] of Object.entries(source.files)) {
       expect(sha256(path.join(vendorDirectory, file)), file).toBe(hash);
     }
   });
 
-  it("has all 40 conformance cases", () => {
-    expect(cases).toHaveLength(40);
+  it("has all 56 conformance cases (contract revision 1.1)", () => {
+    expect(cases).toHaveLength(56);
+  });
+
+  it("the vendored identity-environment list matches the vendored library", () => {
+    // The publisher never launches a process for another actor (it only spawns its
+    // own Astro and Pagefind steps), so revision 1.1 rule 7 does not apply here;
+    // this keeps the two vendored files consistent for any future launcher.
+    const environment = readJson(path.join(fixtureDirectory, "identity-environment.json"));
+    expect([...IDENTITY_ENVIRONMENT_VARIABLES]).toEqual(environment.variables);
   });
 
   for (const item of cases) {
@@ -94,7 +103,8 @@ describe("vendored Praxis contract", () => {
       expect(JSON.stringify(item.block)).toBe(before);
       expect(described.provenanceStatus.verdict).toBe(item.expect);
       if (item.expect === "malformed") {
-        expect(described.provenance).toBeNull();
+        expect("provenance" in described).toBe(false);
+        expect(described.provenanceWithheld).toBe(true);
         expect(described.provenanceStatus.problems.length).toBeGreaterThan(0);
       } else {
         expect(described.provenance).toEqual(item.block);
@@ -209,7 +219,9 @@ describe("normalization preserves provenance", () => {
       provenance: { contributions: { "EXE-1": { operations: ["created"], at: "yesterday", actor: A } } }
     });
 
-    expect(record.provenance).toBeNull();
+    // Withheld, never presented as "unattributed" (provenance: null).
+    expect("provenance" in record).toBe(false);
+    expect(record.provenanceWithheld).toBe(true);
     expect(record.provenanceStatus.verdict).toBe("malformed");
     const diagnostics = validateDocuments([record]).filter((item) => item.code === "malformed-provenance");
     expect(diagnostics).toHaveLength(1);
@@ -335,6 +347,90 @@ describe("lineage", () => {
   });
 });
 
+describe("contract revision 1.1 and review findings", () => {
+  const block = { contributions: { "EXE-1": { operations: ["created"], at: "2026-09-26T08:00:00.000Z", actor: A } } };
+
+  it("a declared `provenance: null` is malformed and withheld, not unattributed", () => {
+    const parsed = { ...parsedFrom({ id: "EV-2026-001" }), frontmatterText: "id: EV-2026-001\nprovenance:\n" };
+    const record = normalizeDocument(parsed);
+
+    expect("provenance" in record).toBe(false);
+    expect(record.provenanceWithheld).toBe(true);
+    expect(record.provenanceStatus.verdict).toBe("malformed");
+    expect(provenanceDiagnostics(record)).toMatchObject([{ code: "malformed-provenance", severity: "warning" }]);
+  });
+
+  it("null inside a block is malformed (revision 1.1: null is not absence)", () => {
+    for (const field of ["last", "reason", "evidence"]) {
+      const entry = { ...block.contributions["EXE-1"], [field]: null };
+      const record = normalized({ id: "EV-2026-001", provenance: { contributions: { "EXE-1": entry } } });
+      expect(record.provenanceWithheld, field).toBe(true);
+    }
+    expect(normalized({ id: "EV-2026-001", provenance: { ...block, schema: null } }).provenanceWithheld).toBe(true);
+    expect(normalized({ id: "EV-2026-001", provenance: { ...block, derivedFrom: null } }).provenanceWithheld).toBe(true);
+  });
+
+  it("exact matching and calendar-valid timestamps are enforced through the vendored classifier", () => {
+    const withAt = (at) => ({ contributions: { "EXE-1": { operations: ["created"], at, actor: A } } });
+    expect(normalized({ id: "E", provenance: withAt("2026-02-30T08:00:00.000Z") }).provenanceWithheld).toBe(true);
+    expect(normalized({ id: "E", provenance: withAt("2026-09-26T24:00:00.000Z") }).provenanceWithheld).toBe(true);
+    expect(normalized({ id: "E", provenance: withAt("9999-12-31T23:59:59.999999999Z") }).provenanceStatus.verdict).toBe("supported");
+    expect(normalized({ id: "E", provenance: { contributions: { "EXE-1\n": block.contributions["EXE-1"] } } }).provenanceWithheld).toBe(true);
+    expect(normalized({ id: "E", provenance: { ...block, schema: "praxis.provenance/1\n" } }).provenanceWithheld).toBe(true);
+  });
+
+  it("every record states provenanceWithheld explicitly", () => {
+    expect(normalized({ id: "E" }).provenanceWithheld).toBe(false);
+    expect(normalized({ id: "E", provenance: block }).provenanceWithheld).toBe(false);
+    expect(normalized({ id: "E", provenance: { schema: "praxis.provenance/2" } }).provenanceWithheld).toBe(false);
+  });
+
+  it("a withheld block is distinguishable from an unattributed record in the public catalog", () => {
+    const withheld = normalized({ id: "EV-2026-001", provenance: { contributions: "bad" } }, "research/a.md");
+    const unattributed = normalized({ id: "EV-2026-002" }, "research/b.md");
+    const [first, second] = JSON.parse(JSON.stringify(createPublicCatalog([withheld, unattributed], { site: { title: "t", baseUrl: "/" } }))).records;
+
+    expect(first).not.toHaveProperty("provenance");
+    expect(first.provenanceWithheld).toBe(true);
+    expect(first.provenanceStatus.verdict).toBe("malformed");
+    expect(second.provenance).toBeNull();
+    expect(second.provenanceWithheld).toBe(false);
+    expect(second.provenanceStatus).toBeNull();
+  });
+
+  it("a scalar author field is one self-declared author, never split on commas", () => {
+    const record = normalized({ id: "E", author: "Doe, Jane", source_author: "Smith, J., and Lee, K." });
+
+    expect(record.selfDeclaredAuthors).toEqual([
+      { field: "author", value: "Doe, Jane", status: SELF_DECLARED_UNVERIFIED },
+      { field: "source_author", value: "Smith, J., and Lee, K.", status: SELF_DECLARED_UNVERIFIED }
+    ]);
+    expect(record.authorAgent).toBe("Doe, Jane");
+  });
+
+  it("a real YAML list of authors is several self-declared authors", async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "rp-prov-authors-"));
+    fs.writeFileSync(path.join(directory, "a.md"), "---\nid: E\nauthor_agent: [codex, \"Doe, Jane\"]\n---\n\n# A\n");
+    const record = normalizeDocument(await parseDocument(directory, "a.md"));
+
+    expect(record.selfDeclaredAuthors.map((item) => item.value)).toEqual(["codex", "Doe, Jane"]);
+    expect(record.provenance).toBeNull();
+  });
+
+  it("a scalar derived_from is one lineage reference; only a list holds several", () => {
+    expect(normalized({ id: "E", derived_from: "EV-1, EV-2" }).derivedFrom).toEqual(["EV-1, EV-2"]);
+    expect(normalized({ id: "E", derived_from: "EV-1" }).derivedFrom).toEqual(["EV-1"]);
+    expect(normalized({ id: "E", derived_from: ["EV-1", "EV-2"] }).derivedFrom).toEqual(["EV-1", "EV-2"]);
+  });
+
+  it("the catalog and record schema versions are 1.2 and the graph is 1.1", () => {
+    const record = normalized({ id: "E" });
+    expect(record.schemaVersion).toBe("1.2");
+    expect(createPublicCatalog([record], { site: { title: "t", baseUrl: "/" } }).schemaVersion).toBe("1.2");
+    expect(buildRelationshipGraph([record]).schemaVersion).toBe("1.1");
+  });
+});
+
 describe("build pipeline", () => {
   function temporaryProject(files) {
     // Under the workspace (git-ignored .tmp/) so the test runner may import its config.
@@ -401,7 +497,8 @@ describe("build pipeline", () => {
     const byId = new Map(catalog.records.map((record) => [record.id, record]));
 
     expect(byId.get("EV-2026-001").provenance.contributions["EXE-20260926T080000000Z-aaaa0001"].at).toBe("2026-09-26T08:00:00.000Z");
-    expect(byId.get("EV-2026-002").provenance).toBeNull();
+    expect("provenance" in byId.get("EV-2026-002")).toBe(false);
+    expect(byId.get("EV-2026-002").provenanceWithheld).toBe(true);
     expect(byId.get("EV-2026-002").provenanceStatus.verdict).toBe("malformed");
     expect(byId.get("EV-2026-002").derivedFrom).toEqual(["EV-2026-001"]);
     expect(graph.edges).toContainEqual({ source: "EV-2026-002", target: "EV-2026-001", type: "derived-from" });
@@ -418,7 +515,9 @@ describe("build pipeline", () => {
     const { diagnostics, catalog } = await validateProject(directory);
 
     expect(catalog.records).toHaveLength(2);
-    expect(catalog.records.every((record) => record.provenance === null && record.provenanceStatus === null)).toBe(true);
+    expect(catalog.records.every((record) => record.provenance === null && record.provenanceStatus === null && record.provenanceWithheld === false)).toBe(true);
+    expect(catalog.schemaVersion).toBe("1.2");
+    expect(catalog.records.every((record) => record.schemaVersion === "1.2")).toBe(true);
     expect(catalog.records.every((record) => record.created === null && record.updated === null)).toBe(true);
     expect(diagnostics.filter((item) => item.code.includes("provenance"))).toEqual([]);
   });

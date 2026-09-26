@@ -58,41 +58,55 @@ export function readProvenanceSource(parsed) {
   const source = faithful ?? parsed.frontmatter ?? {};
   const lineageField = lineageFields.find((field) => !isAbsent(source[field]));
   return {
+    // A key that is present with the value null is malformed, never "absent"
+    // (Praxis contract revision 1.1, "Null is not absence").
+    present: Object.prototype.hasOwnProperty.call(source, "provenance"),
     provenance: source.provenance,
     lineage: lineageField === undefined ? undefined : source[lineageField]
   };
 }
 
-function toReferenceList(value) {
-  if (isAbsent(value) || value === "") {
+/**
+ * A scalar is exactly one value (`author: "Doe, Jane"` is one author); only a real
+ * YAML/JSON list holds several. Nothing is split on commas.
+ */
+function toValueList(value) {
+  if (isAbsent(value)) {
     return [];
   }
-  const items = Array.isArray(value) ? value : String(value).split(",");
-  return items.map((item) => String(item).trim()).filter(Boolean);
+  const items = Array.isArray(value) ? value : [value];
+  return items
+    .filter((item) => !isAbsent(item))
+    .map((item) => (typeof item === "string" ? item : typeof item === "object" ? JSON.stringify(item) : String(item)).trim())
+    .filter(Boolean);
 }
 
 const unique = (items) => items.filter((item, index) => items.indexOf(item) === index);
 
 /**
  * Classifies a received provenance value with the Praxis rules and decides what is
- * published. Returns `{ provenance, provenanceStatus }`:
- * - absent: both `null` (the artifact reads as unattributed; nothing is inferred);
- * - supported / unsupported: the block verbatim plus its verdict;
- * - malformed: no block (it is rejected at this boundary) plus the verdict and problems.
+ * published. `present` says whether the source declared the field at all (a declared
+ * `null` is malformed, not absent). Returns:
+ * - absent: `provenance: null`, `provenanceStatus: null`, `provenanceWithheld: false`
+ *   (unattributed; nothing is inferred);
+ * - supported / unsupported: the block verbatim, its verdict, `provenanceWithheld: false`;
+ * - malformed: NO `provenance` key at all, `provenanceWithheld: true`, and the verdict
+ *   with its problems, so a consumer can never mistake a rejected block for "unattributed".
  */
-export function describeProvenance(received) {
-  if (isAbsent(received)) {
-    return { provenance: null, provenanceStatus: null };
+export function describeProvenance(received, present = received !== undefined) {
+  if (!present) {
+    return { provenance: null, provenanceWithheld: false, provenanceStatus: null };
   }
   const result = classify(received);
   if (result.verdict === "malformed") {
     return {
-      provenance: null,
+      provenanceWithheld: true,
       provenanceStatus: { verdict: "malformed", schema: null, warnings: [], problems: [...result.problems] }
     };
   }
   return {
     provenance: clone(received),
+    provenanceWithheld: false,
     provenanceStatus: {
       verdict: result.verdict,
       schema: result.verdict === "unsupported" ? result.schema : received.schema ?? SCHEMA_TAG,
@@ -108,14 +122,14 @@ export function describeProvenance(received) {
  * Lineage is not authorship.
  */
 export function lineageOf(lineage, described) {
-  const fromBlock = described.provenanceStatus?.verdict === "supported" ? toReferenceList(described.provenance.derivedFrom) : [];
-  return unique([...toReferenceList(lineage), ...fromBlock]);
+  const fromBlock = described.provenanceStatus?.verdict === "supported" ? toValueList(described.provenance.derivedFrom) : [];
+  return unique([...toValueList(lineage), ...fromBlock]);
 }
 
 /** Legacy free-text authorship claims, labelled as self-declared and unverified. */
 export function selfDeclaredAuthorsOf(frontmatter) {
   return legacyAuthorFields.flatMap((field) =>
-    toReferenceList(isObject(frontmatter) ? frontmatter[field] : undefined).map((value) => ({
+    toValueList(isObject(frontmatter) ? frontmatter[field] : undefined).map((value) => ({
       field,
       value,
       status: SELF_DECLARED_UNVERIFIED
@@ -126,10 +140,9 @@ export function selfDeclaredAuthorsOf(frontmatter) {
 /** All provenance-related fields of a normalized record. */
 export function provenanceFields(parsed) {
   const source = readProvenanceSource(parsed);
-  const described = describeProvenance(source.provenance);
+  const described = describeProvenance(source.provenance, source.present);
   return {
-    provenance: described.provenance,
-    provenanceStatus: described.provenanceStatus,
+    ...described,
     derivedFrom: lineageOf(source.lineage, described),
     selfDeclaredAuthors: selfDeclaredAuthorsOf(parsed.frontmatter)
   };
@@ -146,7 +159,7 @@ export function provenanceDiagnostics(document) {
       severity: "warning",
       code: "malformed-provenance",
       sourcePath: document.sourcePath,
-      message: `Provenance was rejected and not published: ${status.problems.join("; ")}`
+      message: `Provenance was rejected and withheld from the catalog (provenanceWithheld: true): ${status.problems.join("; ")}`
     }];
   }
   if (status.verdict === "unsupported") {

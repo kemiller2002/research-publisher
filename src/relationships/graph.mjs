@@ -68,7 +68,7 @@ export function buildRelationshipGraph(documents) {
   }
 
   return {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     nodes,
     edges,
     backlinks
