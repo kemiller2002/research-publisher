@@ -39,6 +39,18 @@ export function buildRelationshipGraph(documents) {
         });
       }
     }
+    // Lineage (R14.5): typed separately from every other relation and never read as
+    // authorship. Only references to published documents become edges; foreign or
+    // unresolved references stay on the record's `derivedFrom`.
+    for (const sourceId of document.derivedFrom ?? []) {
+      if (byId.has(sourceId)) {
+        edges.push({
+          source,
+          target: sourceId,
+          type: "derived-from"
+        });
+      }
+    }
     for (const theoryId of document.theoryIds) {
       if (byId.has(theoryId)) {
         edges.push({
@@ -56,7 +68,7 @@ export function buildRelationshipGraph(documents) {
   }
 
   return {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     nodes,
     edges,
     backlinks

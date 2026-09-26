@@ -9,7 +9,7 @@ const navItems = [
   { href: "/collections/artifact-type/", label: "Collections" }
 ];
 const recentDocuments = [...catalog.records]
-  .sort((left, right) => right.updated.localeCompare(left.updated))
+  .sort((left, right) => (right.updated ?? "").localeCompare(left.updated ?? ""))
   .slice(0, 6);
 const entryDocuments = Object.values(guides).flat().slice(0, 6);
 const featuredDocuments = entryDocuments.length > 0 ? entryDocuments : recentDocuments;

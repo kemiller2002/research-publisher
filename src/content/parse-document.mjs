@@ -64,6 +64,9 @@ export async function parseDocument(projectRoot, relativePath) {
     absolutePath,
     relativePath,
     frontmatter: parsed.data ?? {},
+    frontmatterText: parsed.matter ?? "",
+    // "json" for `---json` front matter, whose text is classified as JSON text (REQ-RP-PROV R14.12).
+    frontmatterLanguage: parsed.language ?? "yaml",
     excerpt: parsed.excerpt ?? "",
     body: parsed.content,
     raw,

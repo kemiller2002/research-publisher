@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
+import { provenanceFields } from "./provenance.mjs";
 
 const artifactPrefixMap = {
   RP: "research-package",
@@ -21,6 +22,8 @@ const legacyAliases = {
   updated_at: "updated",
   created_at: "created",
   author: "authorAgent",
+  // Self-declared, unverified free text; never converted into structured provenance.
+  author_agent: "authorAgent",
   documentPurpose: "purposes",
   purpose: "purposes",
   audience: "audiences",
@@ -180,7 +183,7 @@ export function normalizeDocument(parsed) {
   const contentHash = crypto.createHash("sha256").update(parsed.body).digest("hex");
 
   return {
-    schemaVersion: "1.1",
+    schemaVersion: "1.3",
     id,
     title,
     slug,
@@ -201,8 +204,9 @@ export function normalizeDocument(parsed) {
     completion: toNumber(frontmatter.completion),
     priority: frontmatter.priority ? String(frontmatter.priority).trim() : "medium",
     authorAgent: frontmatter.authorAgent ? String(frontmatter.authorAgent).trim() : "unknown",
-    created: normalizeDate(frontmatter.created) ?? "2026-07-22",
-    updated: normalizeDate(frontmatter.updated) ?? "2026-07-22",
+    // Absent dates stay null (unknown); they are never fabricated (R2.1, R14.9).
+    created: normalizeDate(frontmatter.created),
+    updated: normalizeDate(frontmatter.updated),
     tags: normalizeArray(frontmatter.tags),
     keywords: normalizeArray(frontmatter.keywords),
     relatedProjects: normalizeArray(frontmatter.relatedProjects),
@@ -212,6 +216,7 @@ export function normalizeDocument(parsed) {
     evidenceIds: normalizeArray(frontmatter.evidenceIds),
     hypothesisIds: normalizeArray(frontmatter.hypothesisIds),
     theoryIds: normalizeArray(frontmatter.theoryIds),
+    ...provenanceFields(parsed),
     headings: parsed.headings,
     sourcePath: parsed.relativePath,
     contentHash,
